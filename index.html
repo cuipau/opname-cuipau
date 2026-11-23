@@ -2,502 +2,240 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OPNAME CUI & PAU V3.8.3</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CUI / PAU - Opname Gudang</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
-*{box-sizing:border-box;font-family:Inter,system-ui,Arial,sans-serif}
-body{margin:0;background:#f1f5f9;color:#0f172a;padding-bottom:24px}
-.topbar{background:#0f172a;color:#fff;padding:14px 16px;position:sticky;top:0;z-index:20}
-.topbar-inner{max-width:980px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
-.topbar h1{font-size:18px;margin:0}
-.pill{background:#22c55e;color:#fff;font-size:11px;font-weight:800;padding:5px 10px;border-radius:20px}
-.tabs{max-width:980px;margin:12px auto 0;padding:0 12px;display:flex;gap:8px}
-.tab{flex:1;padding:12px;border:0;border-radius:12px 12px 0 0;font-weight:800;cursor:pointer;background:#e2e8f0;color:#475569;font-size:14px}
-.tab.active{background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-bottom:0}
-.wrap{max-width:980px;margin:0 auto;padding:14px 12px}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-bottom:12px}
-label{display:block;font-size:11px;font-weight:800;letter-spacing:.6px;color:#64748b;margin-bottom:6px}
-input,select{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:10px;font-size:15px;background:#fff;outline:none}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-@media(max-width:640px){.grid3{grid-template-columns:1fr 1fr}.grid3>div:last-child{grid-column:1/-1}}
-.btn{padding:12px 14px;border:0;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px}
-.btn-green{background:#16a34a;color:#fff;width:100%}.btn-blue{background:#2563eb;color:#fff}.btn-gray{background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0}.btn-red{background:#dc2626;color:#fff}.btn-dark{background:#0f172a;color:#fff;width:100%}
-.row{display:flex;gap:10px;margin-top:10px}.row .btn{flex:1}
-.info{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;margin-top:12px;display:none}
-.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
-@media(max-width:640px){.kpi{grid-template-columns:1fr 1fr}}
-.kpi-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px;text-align:center}
-.kpi-card b{font-size:22px;display:block}.kpi-card small{font-size:11px;color:#64748b;font-weight:700}
-.bar{height:8px;background:#e2e8f0;border-radius:20px;overflow:hidden;margin-top:8px}
-.bar>div{height:100%;background:#16a34a}
-.saran{display:none;background:#fff;border:1px solid #e2e8f0;border-radius:10px;max-height:280px;overflow:auto;margin-top:6px}
-.saran div{padding:10px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px}
-.saran div:hover{background:#eff6ff}
-.pending{display:none;background:#fffbeb;border:1px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:12px}
-.table-card{padding:0;overflow:hidden}.table-head{padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
-.table-wrap{overflow:auto;max-height:460px;border-top:1px solid #e2e8f0}
-table{width:100%;border-collapse:collapse;font-size:12px;min-width:900px}
-th,td{border-bottom:1px solid #f1f5f9;padding:9px 10px;text-align:left;white-space:nowrap}
-th{background:#0f172a;color:#fff;position:sticky;top:0}
-.badge{padding:4px 9px;border-radius:20px;font-size:11px;font-weight:800}.ok{background:#dcfce7;color:#166534}.warn{background:#fef9c3;color:#854d0e}.lock{background:#fee2e2;color:#991b1b}
-.hint{font-size:12px;color:#64748b;line-height:1.5}
-#scanModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;padding:16px}
-.scan-box{max-width:520px;margin:20px auto;background:#fff;border-radius:16px;padding:16px}
-#reader{width:100%;border-radius:12px;overflow:hidden;background:#000}
-.gridQR{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-@media(max-width:700px){.gridQR{grid-template-columns:1fr 1fr}} @media(max-width:420px){.gridQR{grid-template-columns:1fr}}
-.qitem{border:2px solid #0f172a;border-radius:10px;padding:12px;text-align:center;background:#fff;position:relative}
-.qitem b{font-size:14px;display:block}.qitem small{font-size:11px;color:#64748b}
-.qitem img{width:150px!important;height:150px!important;margin:8px auto;display:block}
-.qblok{background:#0f172a;color:#fff;font-weight:800;font-size:12px;padding:6px 8px;border-radius:6px;margin-top:8px}
-.qrak{background:#fef3c7;color:#92400e;font-weight:800;font-size:12px;padding:6px 8px;border-radius:6px;margin-top:4px}
-.qcut{border-top:1px dashed #cbd5e1;margin-top:8px;padding-top:6px;font-size:10px;color:#94a3b8}
-@media print{body{background:#fff}.topbar,.tabs,.no-print{display:none!important}.wrap{max-width:100%;padding:0}.card{border:0}#pageQR{display:block!important}}
+  body{font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:16px;background:#f6f6f6}
+  .card{background:#fff;padding:16px;border-radius:12px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .tabs{display:flex;gap:8px;margin-bottom:12px}
+  .tab{flex:1;padding:12px;border:0;border-radius:10px;font-weight:700;cursor:pointer;background:#e5e7eb}
+  .tab.active{background:#2563eb;color:#fff}
+  label{font-size:13px;font-weight:600;display:block;margin-top:12px}
+  input,select{width:100%;padding:10px;margin-top:4px;border:1px solid #ddd;border-radius:8px;font-size:15px;box-sizing:border-box}
+  .row{display:flex;gap:8px}.row>div{flex:1}
+  button{width:100%;padding:12px;border:0;border-radius:10px;font-weight:700;margin-top:12px;cursor:pointer}
+  .btn-blue{background:#2563eb;color:#fff}.btn-green{background:#16a34a;color:#fff}.btn-white{background:#fff;border:1px solid #ddd}
+  #qrcode{display:flex;justify-content:center;padding:16px}
+  .kode{font-size:22px;font-weight:800;text-align:center;letter-spacing:1px}
+  .item-row{display:flex;gap:6px;margin-top:6px}
+  .ok{color:#16a34a;font-size:13px}.err{color:#dc2626;font-size:13px}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  th,td{border:1px solid #eee;padding:6px;text-align:left} th{background:#f9fafb}
+  @media print{body{background:#fff} .no-print{display:none} .card{box-shadow:none}}
 </style>
 </head>
 <body>
-<div class="topbar"><div class="topbar-inner"><h1>📦 OPNAME CUI & PAU V3.8.3</h1><span class="pill">● LIVE</span></div></div>
-<div class="tabs"><button class="tab active" id="tabOpname" onclick="showPage('opname')">📦 OPNAME</button><button class="tab" id="tabQR" onclick="showPage('qr')">📷 QR CODE</button></div>
 
-<div id="pageOpname" class="wrap">
-<div class="kpi">
-  <div class="kpi-card"><small>TOTAL MASTER</small><b id="kpiTotal">-</b><small id="kpiTotalSub">-</small></div>
-  <div class="kpi-card"><small>✅ SUDAH OK</small><b id="kpiSudah" style="color:#16a34a">-</b><small>HIT1 Klop / HIT1=HIT2</small></div>
-  <div class="kpi-card"><small>⚠️ PERLU HIT2 / VALIDASI</small><b id="kpiPerlu" style="color:#dc2626">-</b><small>Belum klop</small></div>
-  <div class="kpi-card"><small>PROGRESS OK</small><b id="kpiPersen">-</b><div class="bar"><div id="kpiBar" style="width:0%"></div></div></div>
+<div class="card no-print" style="text-align:center;padding:12px">
+  <h2 style="margin:0">📦 CUI / PAU</h2>
+  <p style="color:#666;font-size:13px;margin:4px 0 0">Opname Gudang Semarang • Supabase: cuipau</p>
+  <div id="status" style="font-size:12px;margin-top:6px;color:#666">Mengecek koneksi...</div>
 </div>
 
-<div class="card">
-  <div class="grid2">
-    <div><label>KARYAWAN</label><input id="karyawan" list="listKaryawan" value="REZA"><datalist id="listKaryawan"><option value="REZA"></option><option value="ARIS"></option><option value="DIYAH"></option><option value="INDRA"></option><option value="TIWI"></option></datalist></div>
-    <div><label>PERUSAHAAN</label><select id="perusahaan" onchange="onPerusahaanCabangChange()"><option>CUI</option><option>PAU</option></select></div>
-  </div>
-  <div style="height:12px"></div>
-  <div class="grid3">
-    <div><label>CABANG</label><select id="cabang" onchange="onPerusahaanCabangChange()"></select></div>
-    <div><label>JENIS GUDANG</label><select id="jenisGudang" onchange="onJenisChange()"></select></div>
-    <div><label>WAREHOUSE — PILIH</label><select id="warehouse" onchange="onWarehouseChange()"></select></div>
-  </div>
-  <div style="height:12px"></div>
-  <div class="grid3">
-    <div><label>BLOK — ISI MANUAL</label><input id="blok" placeholder="A - Maspion / B - Bukit / C - Superex / RAK - ICI" value="A - Maspion"></div>
-    <div><label>RAK — ISI MANUAL</label><input id="rak" placeholder="RAK 1 L1 / RAK 1 L2 / LANTAI" value="LANTAI"></div>
-    <div><label>TIPE HITUNG</label><select id="tipe"><option>HIT1</option><option>HIT2</option><option>VALIDASI</option></select></div>
-  </div>
-  <div class="hint" id="whInfo" style="margin-top:8px"></div>
-  <div style="height:12px"></div>
-  <div><label>KODE ITEM — SCAN QR / KETIK KODE / NAMA</label>
-    <input id="kode" placeholder="P101... atau Catylac..." oninput="onKodeInput()" autocomplete="off">
-    <button class="btn btn-dark" style="margin-top:10px" onclick="openScan()">📷 SCAN QR / BARCODE</button>
-    <div id="saranKode" class="saran"></div>
-    <div class="hint" id="kodeCount"></div>
-  </div>
-  <div id="infoBarang" class="info"><div>📦 <b id="infoKode">-</b></div><div id="infoNama" style="font-size:14px;margin:4px 0">-</div><div class="muted">🏢 <span id="infoCabang">-</span> • <b id="infoSudah">Belum pernah dihitung</b></div><div id="infoStatus" style="font-weight:800;margin-top:6px"></div></div>
-  <div style="height:12px"></div>
-  <div class="grid2"><div><label>QTY — HITUNG DARI FISIK, JANGAN TEBAK</label><input id="qty" type="number" inputmode="numeric" placeholder="Contoh: 11"></div><div><label>NAMA ITEM (OTOMATIS)</label><input id="nama" placeholder="Otomatis terisi"></div></div>
-  <div style="height:14px"></div>
-  <button class="btn btn-green" onclick="simpanHit()">➕ SIMPAN HIT</button>
-  <div class="row"><button class="btn btn-blue" onclick="loadAll(true)">🔄 REFRESH DATA</button><button class="btn btn-gray" onclick="autoRefreshToggle()">⏱ Auto: <span id="autoTxt">ON</span></button></div>
-</div>
-<div id="pendingBox" class="pending"><h3>⚠️ DOUBLE INPUT</h3><p id="pendingText"></p><button class="btn btn-green" id="btnTambah" onclick="confirmDouble(true)">OK — TAMBAH</button><div style="height:8px"></div><button class="btn btn-red" onclick="confirmDouble(false)">BATAL</button></div>
-<div class="card">
-  <div class="grid3"><div><label>FILTER CABANG</label><select id="filterCabang" onchange="render()"></select></div><div><label>FILTER PERUSAHAAN</label><select id="filterPer" onchange="render()"><option>ALL</option><option>CUI</option><option>PAU</option></select></div><div><label>CARI KODE / NAMA / WAREHOUSE / BLOK / RAK</label><input id="cari" placeholder="Cari..." oninput="render()"></div></div>
-  <div id="progress" style="font-weight:800;margin-top:12px;font-size:14px"></div>
-</div>
-<div class="card table-card"><div class="table-head"><h3>📋 Hasil Hitung — SAP TIDAK DITAMPILKAN</h3><small>Geser →</small></div><div class="table-wrap"><table><thead><tr><th>Cabang</th><th>Perusahaan</th><th>Jenis Gudang</th><th>Warehouse</th><th>Blok</th><th>Rak</th><th>Kode Item</th><th>Nama Item</th><th>Hit-1 Detail</th><th>Hit-1 Total</th><th>Hit-2 Detail</th><th>Hit-2 Total</th><th>Validasi</th><th>Final Qty</th><th>Status</th><th>Waktu</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+<div class="tabs no-print">
+  <button class="tab active" id="tabBtnBuat" onclick="showTab('buat')">🏷️ Buat QR Rak</button>
+  <button class="tab" id="tabBtnOpname" onclick="showTab('opname')">📷 Opname</button>
 </div>
 
-<div id="pageQR" class="wrap" style="display:none">
-<div class="card no-print">
-  <h3 style="margin:0 0 12px">📷 Cetak QR Code Per Item + Blok & Rak</h3>
-  <div class="grid3">
-    <div><label>PERUSAHAAN</label><select id="qrPer" onchange="renderQR()"><option value="ALL">ALL</option><option>CUI</option><option>PAU</option></select></div>
-    <div><label>CABANG</label><select id="qrCabang" onchange="renderQR()"></select></div>
-    <div><label>CARI KODE / NAMA</label><input id="qrCari" placeholder="Catylac / P101..." oninput="renderQR()"></div>
-  </div>
-  <div style="height:12px"></div>
-  <div style="background:#fef9c3;border:1px solid #f59e0b;border-radius:10px;padding:12px">
-    <label style="color:#92400e">📍 BLOK & RAK UNTUK QR YANG DICETAK — ISI MANUAL (Akan Tertulis Di Kartu QR & Masuk Ke Dalam QR)</label>
-    <div class="grid2">
-      <div><label>BLOK</label><input id="qrBlok" placeholder="A - Maspion / B - Bukit / C - Superex" value="A - Maspion" oninput="renderQR()"></div>
-      <div><label>RAK</label><input id="qrRak" placeholder="RAK 1 L1 / RAK 1 L2 / LANTAI" value="LANTAI" oninput="renderQR()"></div>
+<!-- ============ TAB BUAT QR ============ -->
+<div id="tabBuat">
+  <div class="card no-print">
+    <h3 style="margin:0">Buat QR Rak Manual</h3>
+    <label>Perusahaan</label>
+    <select id="perusahaan"><option value="PT CUI">PT CUI</option><option value="PT PAU">PT PAU</option></select>
+    <label>Gudang</label>
+    <select id="gudang"><option value="W01-01">W01-01 - Warehouse Semarang Pusat</option></select>
+    <div class="row">
+      <div><label>Lokasi / Blok *</label><input id="lokasi" placeholder="A01" style="text-transform:uppercase"></div>
+      <div><label>Rak *</label><input id="rak" placeholder="R01" style="text-transform:uppercase"></div>
     </div>
-    <div class="hint" style="color:#92400e;margin-top:6px">Contoh: Blok <b>A - Maspion</b>, Rak <b>RAK 1 L1</b> → QR berisi <b>P101-010|A - Maspion|RAK 1 L1</b>. Pas di-scan di OPNAME, Blok & Rak otomatis keisi.</div>
+    <div class="row">
+      <div><label>Lantai *</label><select id="lantai"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+      <div><label>Posisi *</label><select id="posisi"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+    </div>
+    <label>Keterangan (opsional)</label><input id="keterangan" placeholder="Rak besi / Palet / Lantai">
+    <label>Barang di rak ini</label><div id="items"></div>
+    <button class="btn-white" onclick="tambahBarang()">+ Tambah Barang</button>
+    <button class="btn-blue" onclick="generateQR()">Generate QR</button>
   </div>
-  <div style="height:12px"></div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-blue" onclick="loadAll(true)">🔄 Ambil Master</button><button class="btn btn-green" onclick="window.print()">🖨 Print / Save PDF</button></div>
-  <div class="hint" style="margin-top:10px" id="qrInfo">QR = Kode Item + Blok + Rak. Stok SAP tidak ditampilkan.</div>
-</div>
-<div id="qrList" class="gridQR"></div>
+
+  <div class="card" id="hasil" style="display:none">
+    <div class="kode" id="kodeRak">-</div>
+    <div style="text-align:center;font-size:13px;color:#666" id="detailRak">-</div>
+    <div id="qrcode"></div>
+    <div style="text-align:center;font-size:12px;color:#666" id="listBarang"></div>
+    <div class="no-print">
+      <button class="btn-green" onclick="simpanRak()">💾 Simpan ke Supabase</button>
+      <button class="btn-white" onclick="window.print()">🖨️ Cetak QR</button>
+      <button class="btn-white" onclick="location.reload()">Buat Rak Baru</button>
+      <div id="simpanStatus"></div>
+    </div>
+  </div>
+
+  <div class="card no-print">
+    <h3 style="margin:0">Daftar Rak <button style="width:auto;padding:6px 10px;margin:0" class="btn-white" onclick="loadDaftar()">🔄 Refresh</button></h3>
+    <div id="daftar" style="font-size:13px;margin-top:8px">Loading...</div>
+  </div>
 </div>
 
-<div id="scanModal"><div class="scan-box"><h3 style="margin:0 0 6px">📷 Scan QR / Barcode</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">Arahkan kamera ke QR / Barcode. QR baru berisi Kode|Blok|Rak.</p><div id="reader"></div><div class="scan-result" id="scanMsg">Membuka kamera...</div><button class="btn btn-red" style="width:100%;margin-top:12px" onclick="closeScan()">✕ TUTUP</button></div></div>
+<!-- ============ TAB OPNAME ============ -->
+<div id="tabOpname" style="display:none">
+  <div class="card">
+    <h3 style="margin:0">Opname Rak</h3>
+    <label>Kode Rak *</label>
+    <div class="row">
+      <div style="flex:2"><input id="opRak" placeholder="A01-R01-L1A" style="text-transform:uppercase"></div>
+      <div><button class="btn-blue" style="margin-top:4px" onclick="loadOpname()">Cari Rak</button></div>
+    </div>
+    <div id="opInfo" style="font-size:13px;margin-top:8px;color:#666">Scan QR rak, atau ketik kode rak lalu Cari Rak.</div>
+    <label>Operator</label><input id="opOperator" placeholder="Nama operator" value="Admin Gudang">
+    <div id="opTable"></div>
+    <div id="opStatus"></div>
+    <button class="btn-green" onclick="simpanOpname()" style="display:none" id="btnSimpanOpname">💾 Simpan Hasil Opname</button>
+  </div>
+  <div class="card no-print">
+    <h3 style="margin:0">Riwayat Opname Terakhir <button style="width:auto;padding:6px 10px;margin:0" class="btn-white" onclick="loadRiwayat()">🔄</button></h3>
+    <div id="riwayat" style="font-size:13px;margin-top:8px">Loading...</div>
+  </div>
+</div>
+
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyHo25lEITHCA0_mdz3dCOzlBkBxMwn9GML3-Qjzy_lUJ283_2-HihumI9Wsk7cjII-/exec";
-const cabangList = ['Semarang Pusat','Kudus','Pemalang','Solo','Purbalingga','Klaten','Bekasi','Cirebon','Blora','Karawang','Salatiga','Tasikmalaya'];
-const jenisList = ['Reguler/Barang Bagus','Reject/Barang Rusak','Klaim Retur','Barang Promosi/Free','Peminjaman','Konsinyasi','ICI Slow Moving','Expired'];
-const WH = [
- {per:'CUI',code:'W01-01',name:'Warehouse Semarang Pusat',jenis:'Reguler/Barang Bagus',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-05',name:'Warehouse Reject Semarang',jenis:'Reject/Barang Rusak',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-06',name:'Warehouse Peminjaman Barang Semarang',jenis:'Peminjaman',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-08',name:'Warehouse Semarang Produk Free',jenis:'Barang Promosi/Free',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-10',name:'Warehouse Semarang Konsinyasi',jenis:'Konsinyasi',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-11',name:'Warehouse Semarang Granit',jenis:'Konsinyasi',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-12',name:'Warehouse DIAMOND JAYA SEJAHTERA',jenis:'Konsinyasi',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-13',name:'Warehouse Semarang Klaim Retur',jenis:'Klaim Retur',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-14',name:'Warehouse ASC Dizain',jenis:'Konsinyasi',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-15',name:'Warehouse Expired Sikkens Wanda Semarang',jenis:'Expired',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-16',name:'Warehouse Klaim ICI Slow Moving Semarang',jenis:'ICI Slow Moving',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-17',name:'Warehouse Reject Klaim ICI Semarang',jenis:'Klaim Retur',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W01-18',name:'Warehouse Semarang Konsinyasi TACO',jenis:'Konsinyasi',cabang:'Semarang Pusat'},
- {per:'CUI',code:'W02-01',name:'Warehouse Kudus',jenis:'Reguler/Barang Bagus',cabang:'Kudus'},
- {per:'CUI',code:'W02-02',name:'Warehouse Reject Kudus',jenis:'Reject/Barang Rusak',cabang:'Kudus'},
- {per:'CUI',code:'W02-03',name:'Warehouse Kudus Konsinyasi',jenis:'Konsinyasi',cabang:'Kudus'},
- {per:'CUI',code:'W02-05',name:'Warehouse Kudus Produk Free',jenis:'Barang Promosi/Free',cabang:'Kudus'},
- {per:'CUI',code:'W02-06',name:'Warehouse Peminjaman Barang Kudus',jenis:'Peminjaman',cabang:'Kudus'},
- {per:'CUI',code:'W02-09',name:'Warehouse Kudus Promosi',jenis:'Barang Promosi/Free',cabang:'Kudus'},
- {per:'CUI',code:'W02-10',name:'Warehouse Kudus Klaim Retur',jenis:'Klaim Retur',cabang:'Kudus'},
- {per:'CUI',code:'W02-11',name:'Warehouse Klaim ICI Slow Moving Kudus',jenis:'ICI Slow Moving',cabang:'Kudus'},
- {per:'CUI',code:'W02-12',name:'Warehouse Reject Klaim ICI Kudus',jenis:'Klaim Retur',cabang:'Kudus'},
- {per:'CUI',code:'W03-01',name:'Warehouse Pemalang',jenis:'Reguler/Barang Bagus',cabang:'Pemalang'},
- {per:'CUI',code:'W03-02',name:'Warehouse Reject Pemalang',jenis:'Reject/Barang Rusak',cabang:'Pemalang'},
- {per:'CUI',code:'W03-03',name:'Warehouse Pemalang Konsinyasi TB KUNCI',jenis:'Konsinyasi',cabang:'Pemalang'},
- {per:'CUI',code:'W03-04',name:'Warehouse Pemalang REJO MAKMUR',jenis:'Konsinyasi',cabang:'Pemalang'},
- {per:'CUI',code:'W03-05',name:'Warehouse Pemalang Produk Free',jenis:'Barang Promosi/Free',cabang:'Pemalang'},
- {per:'CUI',code:'W03-06',name:'Warehouse Peminjaman Barang Pemalang',jenis:'Peminjaman',cabang:'Pemalang'},
- {per:'CUI',code:'W03-09',name:'Warehouse Pemalang Promosi',jenis:'Barang Promosi/Free',cabang:'Pemalang'},
- {per:'CUI',code:'W03-10',name:'Warehouse Pemalang Klaim Retur',jenis:'Klaim Retur',cabang:'Pemalang'},
- {per:'CUI',code:'W03-11',name:'Warehouse Klaim ICI Slow Moving Pemalang',jenis:'ICI Slow Moving',cabang:'Pemalang'},
- {per:'CUI',code:'W03-12',name:'Warehouse Reject Klaim ICI Pemalang',jenis:'Klaim Retur',cabang:'Pemalang'},
- {per:'CUI',code:'W04-01',name:'Warehouse Solo',jenis:'Reguler/Barang Bagus',cabang:'Solo'},
- {per:'CUI',code:'W04-02',name:'Warehouse Reject Solo',jenis:'Reject/Barang Rusak',cabang:'Solo'},
- {per:'CUI',code:'W04-04',name:'Warehouse Solo Konsiyansi',jenis:'Konsinyasi',cabang:'Solo'},
- {per:'CUI',code:'W04-05',name:'Warehouse Solo Produk Free',jenis:'Barang Promosi/Free',cabang:'Solo'},
- {per:'CUI',code:'W04-06',name:'Warehouse Peminjaman Barang Solo',jenis:'Peminjaman',cabang:'Solo'},
- {per:'CUI',code:'W04-08',name:'Warehouse Solo Granit',jenis:'Konsinyasi',cabang:'Solo'},
- {per:'CUI',code:'W04-09',name:'Warehouse Solo Klaim Retur',jenis:'Klaim Retur',cabang:'Solo'},
- {per:'CUI',code:'W05-10',name:'Warehouse Purbalingga',jenis:'Reguler/Barang Bagus',cabang:'Purbalingga'},
- {per:'CUI',code:'W05-05',name:'Warehouse Purwokerto Produk Free',jenis:'Barang Promosi/Free',cabang:'Purbalingga'},
- {per:'CUI',code:'W05-07',name:'Warehouse Purbalingga Klaim Retur',jenis:'Klaim Retur',cabang:'Purbalingga'},
- {per:'CUI',code:'W05-09',name:'Warehouse Purwokerto Konsiyansi',jenis:'Konsinyasi',cabang:'Purbalingga'},
- {per:'CUI',code:'W05-11',name:'Warehouse Peminjaman Barang Purbalingga',jenis:'Peminjaman',cabang:'Purbalingga'},
- {per:'CUI',code:'W05-13',name:'Warehouse Reject Purbalingga',jenis:'Reject/Barang Rusak',cabang:'Purbalingga'},
- {per:'CUI',code:'W05-14',name:'Warehouse Purbalingga Produk Free',jenis:'Barang Promosi/Free',cabang:'Purbalingga'},
- {per:'CUI',code:'W05-15',name:'Warehouse Klaim ICI Slow Moving Purbalingga',jenis:'ICI Slow Moving',cabang:'Purbalingga'},
- {per:'CUI',code:'W05-16',name:'Warehouse Reject Klaim ICI Purbalingga',jenis:'Klaim Retur',cabang:'Purbalingga'},
- {per:'CUI',code:'W06-01',name:'Warehouse Klaten',jenis:'Reguler/Barang Bagus',cabang:'Klaten'},
- {per:'CUI',code:'W06-02',name:'Warehouse Reject Klaten',jenis:'Reject/Barang Rusak',cabang:'Klaten'},
- {per:'CUI',code:'W06-04',name:'Warehouse Klaten Konsinyasi',jenis:'Konsinyasi',cabang:'Klaten'},
- {per:'CUI',code:'W06-05',name:'Warehouse Klaten Produk Free',jenis:'Barang Promosi/Free',cabang:'Klaten'},
- {per:'CUI',code:'W06-06',name:'Warehouse Peminjaman Barang Klaten',jenis:'Peminjaman',cabang:'Klaten'},
- {per:'CUI',code:'W06-08',name:'Warehouse Klaten Klaim Retur',jenis:'Klaim Retur',cabang:'Klaten'},
- {per:'CUI',code:'W06-09',name:'Warehouse WIYONO PUTRO',jenis:'Konsinyasi',cabang:'Klaten'},
- {per:'CUI',code:'W06-11',name:'Warehouse Jogja Granit',jenis:'Konsinyasi',cabang:'Klaten'},
- {per:'CUI',code:'W06-12',name:'Warehouse DIAMOND BARU',jenis:'Konsinyasi',cabang:'Klaten'},
- {per:'CUI',code:'W07-01',name:'Warehouse Bekasi',jenis:'Reguler/Barang Bagus',cabang:'Bekasi'},
- {per:'CUI',code:'W07-02',name:'Warehouse Reject Bekasi',jenis:'Reject/Barang Rusak',cabang:'Bekasi'},
- {per:'CUI',code:'W07-05',name:'Warehouse Bekasi Produk Free',jenis:'Barang Promosi/Free',cabang:'Bekasi'},
- {per:'CUI',code:'W07-06',name:'Warehouse Bekasi Konsiyansi',jenis:'Konsinyasi',cabang:'Bekasi'},
- {per:'CUI',code:'W07-08',name:'Warehouse Blue Store Bekasi',jenis:'Konsinyasi',cabang:'Bekasi'},
- {per:'CUI',code:'W07-09',name:'Warehouse Bekasi Klaim Retur',jenis:'Klaim Retur',cabang:'Bekasi'},
- {per:'CUI',code:'W07-10',name:'Warehouse Klaim ICI Slow Moving Bekasi',jenis:'ICI Slow Moving',cabang:'Bekasi'},
- {per:'CUI',code:'W08-01',name:'Warehouse Cirebon',jenis:'Reguler/Barang Bagus',cabang:'Cirebon'},
- {per:'CUI',code:'W08-02',name:'Warehouse Reject Cirebon',jenis:'Reject/Barang Rusak',cabang:'Cirebon'},
- {per:'CUI',code:'W08-05',name:'Warehouse Cirebon Produk Free',jenis:'Barang Promosi/Free',cabang:'Cirebon'},
- {per:'CUI',code:'W08-06',name:'Warehouse Peminjaman Barang Cirebon',jenis:'Peminjaman',cabang:'Cirebon'},
- {per:'CUI',code:'W08-08',name:'Warehouse Cirebon Klaim Retur',jenis:'Klaim Retur',cabang:'Cirebon'},
- {per:'CUI',code:'W09-01',name:'Warehouse Blora',jenis:'Reguler/Barang Bagus',cabang:'Blora'},
- {per:'CUI',code:'W09-02',name:'Warehouse Reject Blora',jenis:'Reject/Barang Rusak',cabang:'Blora'},
- {per:'CUI',code:'W09-03',name:'Warehouse Blora Konsinyasi',jenis:'Konsinyasi',cabang:'Blora'},
- {per:'CUI',code:'W09-05',name:'Warehouse Blora Produk Free',jenis:'Barang Promosi/Free',cabang:'Blora'},
- {per:'CUI',code:'W09-06',name:'Warehouse Peminjaman Barang Blora',jenis:'Peminjaman',cabang:'Blora'},
- {per:'CUI',code:'W09-09',name:'Warehouse Blora Promosi',jenis:'Barang Promosi/Free',cabang:'Blora'},
- {per:'CUI',code:'W09-10',name:'Warehouse Blora Klaim Retur',jenis:'Klaim Retur',cabang:'Blora'},
- {per:'CUI',code:'W09-11',name:'Warehouse Klaim ICI Slow Moving Blora',jenis:'ICI Slow Moving',cabang:'Blora'},
- {per:'CUI',code:'W09-12',name:'Warehouse Reject Klaim ICI Blora',jenis:'Klaim Retur',cabang:'Blora'},
- {per:'CUI',code:'W10-01',name:'Warehouse Karawang',jenis:'Reguler/Barang Bagus',cabang:'Karawang'},
- {per:'CUI',code:'W10-02',name:'Warehouse Reject Karawang',jenis:'Reject/Barang Rusak',cabang:'Karawang'},
- {per:'CUI',code:'W10-03',name:'Warehouse Konsiyansi Karawang',jenis:'Konsinyasi',cabang:'Karawang'},
- {per:'CUI',code:'W10-05',name:'Warehouse Karawang Produk Free',jenis:'Barang Promosi/Free',cabang:'Karawang'},
- {per:'CUI',code:'W11-01',name:'Warehouse Salatiga',jenis:'Reguler/Barang Bagus',cabang:'Salatiga'},
- {per:'CUI',code:'W11-02',name:'Warehouse Reject Salatiga',jenis:'Reject/Barang Rusak',cabang:'Salatiga'},
- {per:'CUI',code:'W11-03',name:'Warehouse Konsiyansi Salatiga',jenis:'Konsinyasi',cabang:'Salatiga'},
- {per:'CUI',code:'W11-05',name:'Warehouse Salatiga Produk Free',jenis:'Barang Promosi/Free',cabang:'Salatiga'},
- {per:'CUI',code:'W11-06',name:'Warehouse Peminjaman Barang Salatiga',jenis:'Peminjaman',cabang:'Salatiga'},
- {per:'CUI',code:'W11-09',name:'Warehouse Promosi Salatiga',jenis:'Barang Promosi/Free',cabang:'Salatiga'},
- {per:'CUI',code:'W11-10',name:'Warehouse Promosi Klaim Retur',jenis:'Klaim Retur',cabang:'Salatiga'},
- {per:'CUI',code:'W11-11',name:'Warehouse Reject Klaim ICI Salatiga',jenis:'Klaim Retur',cabang:'Salatiga'},
- {per:'CUI',code:'W12-01',name:'Warehouse Tasikmalaya',jenis:'Reguler/Barang Bagus',cabang:'Tasikmalaya'},
- {per:'CUI',code:'W12-02',name:'Warehouse Reject Tasikmalaya',jenis:'Reject/Barang Rusak',cabang:'Tasikmalaya'},
- {per:'CUI',code:'W12-05',name:'Warehouse Tasikmalaya Produk Free',jenis:'Barang Promosi/Free',cabang:'Tasikmalaya'},
- {per:'CUI',code:'W12-06',name:'Warehouse Peminjaman Barang Tasikmalaya',jenis:'Peminjaman',cabang:'Tasikmalaya'},
- {per:'CUI',code:'W12-09',name:'Warehouse Promosi Tasikmalaya',jenis:'Barang Promosi/Free',cabang:'Tasikmalaya'},
- {per:'PAU',code:'W01-01',name:'Warehouse Semarang Pusat',jenis:'Reguler/Barang Bagus',cabang:'Semarang Pusat'},
- {per:'PAU',code:'W01-05',name:'Warehouse Reject Semarang',jenis:'Reject/Barang Rusak',cabang:'Semarang Pusat'},
- {per:'PAU',code:'W01-06',name:'Warehouse Peminjaman Barang Semarang',jenis:'Peminjaman',cabang:'Semarang Pusat'},
- {per:'PAU',code:'W01-08',name:'Warehouse Semarang Produk Free',jenis:'Barang Promosi/Free',cabang:'Semarang Pusat'},
- {per:'PAU',code:'W01-10',name:'Warehouse Semarang Klaim Retur',jenis:'Klaim Retur',cabang:'Semarang Pusat'},
- {per:'PAU',code:'W02-01',name:'Warehouse Kudus',jenis:'Reguler/Barang Bagus',cabang:'Kudus'},
- {per:'PAU',code:'W02-02',name:'Warehouse Reject Kudus',jenis:'Reject/Barang Rusak',cabang:'Kudus'},
- {per:'PAU',code:'W02-06',name:'Warehouse Peminjaman Barang Kudus',jenis:'Peminjaman',cabang:'Kudus'},
- {per:'PAU',code:'W02-08',name:'Warehouse Kudus Produk Free',jenis:'Barang Promosi/Free',cabang:'Kudus'},
- {per:'PAU',code:'W02-10',name:'Warehouse Kudus Klaim Retur',jenis:'Klaim Retur',cabang:'Kudus'},
- {per:'PAU',code:'W03-01',name:'Warehouse Pemalang',jenis:'Reguler/Barang Bagus',cabang:'Pemalang'},
- {per:'PAU',code:'W03-02',name:'Warehouse Reject Pemalang',jenis:'Reject/Barang Rusak',cabang:'Pemalang'},
- {per:'PAU',code:'W03-06',name:'Warehouse Peminjaman Barang Pemalang',jenis:'Peminjaman',cabang:'Pemalang'},
- {per:'PAU',code:'W03-08',name:'Warehouse Pemalang Produk Free',jenis:'Barang Promosi/Free',cabang:'Pemalang'},
- {per:'PAU',code:'W03-09',name:'Warehouse Pemalang Klaim Retur',jenis:'Klaim Retur',cabang:'Pemalang'},
- {per:'PAU',code:'W04-01',name:'Warehouse Solo',jenis:'Reguler/Barang Bagus',cabang:'Solo'},
- {per:'PAU',code:'W04-02',name:'Warehouse Reject Solo',jenis:'Reject/Barang Rusak',cabang:'Solo'},
- {per:'PAU',code:'W04-06',name:'Warehouse Peminjaman Barang Solo',jenis:'Peminjaman',cabang:'Solo'},
- {per:'PAU',code:'W04-07',name:'Warehouse Solo Produk Free',jenis:'Barang Promosi/Free',cabang:'Solo'},
- {per:'PAU',code:'W04-08',name:'Warehouse Solo Klaim Retur',jenis:'Klaim Retur',cabang:'Solo'},
- {per:'PAU',code:'W05-10',name:'Warehouse Purbalingga',jenis:'Reguler/Barang Bagus',cabang:'Purbalingga'},
- {per:'PAU',code:'W05-06',name:'Warehouse Purbalingga Klaim Retur',jenis:'Klaim Retur',cabang:'Purbalingga'},
- {per:'PAU',code:'W05-09',name:'Warehouse Purwokerto Konsinyansi',jenis:'Konsinyasi',cabang:'Purbalingga'},
- {per:'PAU',code:'W05-11',name:'Warehouse Peminjaman Barang Purbalingga',jenis:'Peminjaman',cabang:'Purbalingga'},
- {per:'PAU',code:'W05-13',name:'Warehouse Purbalingga Produk Free',jenis:'Barang Promosi/Free',cabang:'Purbalingga'},
- {per:'PAU',code:'W05-14',name:'Warehouse Purbalingga Reject',jenis:'Reject/Barang Rusak',cabang:'Purbalingga'},
- {per:'PAU',code:'W06-01',name:'Warehouse Klaten',jenis:'Reguler/Barang Bagus',cabang:'Klaten'},
- {per:'PAU',code:'W06-02',name:'Warehouse Reject Klaten',jenis:'Reject/Barang Rusak',cabang:'Klaten'},
- {per:'PAU',code:'W06-06',name:'Warehouse Peminjaman Barang Klaten',jenis:'Peminjaman',cabang:'Klaten'},
- {per:'PAU',code:'W06-07',name:'Warehouse Klaten Produk Free',jenis:'Barang Promosi/Free',cabang:'Klaten'},
- {per:'PAU',code:'W06-10',name:'Warehouse Klaten Klaim Retur',jenis:'Klaim Retur',cabang:'Klaten'},
- {per:'PAU',code:'W07-01',name:'Warehouse Bekasi',jenis:'Reguler/Barang Bagus',cabang:'Bekasi'},
- {per:'PAU',code:'W07-02',name:'Warehouse Reject Bekasi',jenis:'Reject/Barang Rusak',cabang:'Bekasi'},
- {per:'PAU',code:'W07-03',name:'Warehouse Peminjaman Barang Bekasi',jenis:'Peminjaman',cabang:'Bekasi'},
- {per:'PAU',code:'W07-07',name:'Warehouse Bekasi Klaim Retur',jenis:'Klaim Retur',cabang:'Bekasi'},
- {per:'PAU',code:'W07-08',name:'Warehouse Bekasi Produk Free',jenis:'Barang Promosi/Free',cabang:'Bekasi'},
- {per:'PAU',code:'W08-01',name:'Warehouse Cirebon',jenis:'Reguler/Barang Bagus',cabang:'Cirebon'},
- {per:'PAU',code:'W08-02',name:'Warehouse Reject Cirebon',jenis:'Reject/Barang Rusak',cabang:'Cirebon'},
- {per:'PAU',code:'W08-06',name:'Warehouse Peminjaman Barang Cirebon',jenis:'Peminjaman',cabang:'Cirebon'},
- {per:'PAU',code:'W08-08',name:'Warehouse Cirebon Produk Free',jenis:'Barang Promosi/Free',cabang:'Cirebon'},
- {per:'PAU',code:'W09-01',name:'Warehouse Blora',jenis:'Reguler/Barang Bagus',cabang:'Blora'},
- {per:'PAU',code:'W09-02',name:'Warehouse Reject Blora',jenis:'Reject/Barang Rusak',cabang:'Blora'},
- {per:'PAU',code:'W09-06',name:'Warehouse Peminjaman Barang Blora',jenis:'Peminjaman',cabang:'Blora'},
- {per:'PAU',code:'W09-08',name:'Warehouse Blora Produk Free',jenis:'Barang Promosi/Free',cabang:'Blora'},
- {per:'PAU',code:'W09-10',name:'Warehouse Blora Klaim Retur',jenis:'Klaim Retur',cabang:'Blora'},
- {per:'PAU',code:'W10-01',name:'Warehouse Karawang',jenis:'Reguler/Barang Bagus',cabang:'Karawang'},
- {per:'PAU',code:'W10-02',name:'Warehouse Reject Karawang',jenis:'Reject/Barang Rusak',cabang:'Karawang'},
- {per:'PAU',code:'W10-08',name:'Warehouse Karawang Produk Free',jenis:'Barang Promosi/Free',cabang:'Karawang'},
- {per:'PAU',code:'W11-01',name:'Warehouse Salatiga',jenis:'Reguler/Barang Bagus',cabang:'Salatiga'},
- {per:'PAU',code:'W11-02',name:'Warehouse Reject Salatiga',jenis:'Reject/Barang Rusak',cabang:'Salatiga'},
- {per:'PAU',code:'W11-06',name:'Warehouse Peminjaman Barang Salatiga',jenis:'Peminjaman',cabang:'Salatiga'},
- {per:'PAU',code:'W11-08',name:'Warehouse Salatiga Produk Free',jenis:'Barang Promosi/Free',cabang:'Salatiga'},
- {per:'PAU',code:'W11-10',name:'Warehouse Salatiga Klaim Retur',jenis:'Klaim Retur',cabang:'Salatiga'},
- {per:'PAU',code:'W12-01',name:'Warehouse Tasikmalaya',jenis:'Reguler/Barang Bagus',cabang:'Tasikmalaya'}
-];
-let masterV2={}; let masterKeys=[]; let liveData=[]; let pending=null; let autoOn=true; let autoTimer=null; let html5Qr=null; let scanning=false; let allQRItems=[];
-function showPage(p){ document.getElementById('pageOpname').style.display=p==='opname'?'block':'none'; document.getElementById('pageQR').style.display=p==='qr'?'block':'none'; document.getElementById('tabOpname').className='tab'+(p==='opname'?' active':''); document.getElementById('tabQR').className='tab'+(p==='qr'?' active':''); if(p==='qr') renderQR(); }
-function normalizeCabang(s){ let up=String(s||'').toUpperCase(); for(let c of cabangList){ if(up.includes(c.toUpperCase())||c.toUpperCase().includes(up)) return c; if(up==='SEMARANG') return 'Semarang Pusat'; } return s; }
-function cleanKode(k){ return String(k||'').replace(/\s+/g,'').toUpperCase(); }
-function shortDesc(s,len=45){ s=String(s||'').trim(); if(s.length<=len) return s; return s.substring(0,len)+'...'; }
-function getMasterSAP(cabang,kode,perusahaan){ let k=cleanKode(kode); let cab=normalizeCabang(cabang); let e=masterV2[k]; if(!e) return 0; if(e.c && e.c[perusahaan] && e.c[perusahaan][cab]!=null) return Number(e.c[perusahaan][cab])||0; return 0; }
-function getMasterNama(cabang,kode,perusahaan){ let k=cleanKode(kode); let e=masterV2[k]; return e?e.n||'':''; }
-function findKodeByBarcode(barcode){
-  let b=String(barcode||'').trim();
-  // Format baru: KODE|BLOK|RAK -> ambil KODE-nya saja
-  if(b.includes('|')) b=b.split('|')[0];
-  b=cleanKode(b);
-  if(masterV2[b]) return b;
-  for(let k of masterKeys){ if(k.endsWith(b)||b.endsWith(k)) return k; }
-  return null;
+const BASE_URL = "https://cuipau.github.io/opname-cuipau";
+const SUPABASE_URL = "https://wwvtnnhridolhgfhnfaj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_xJ9mRlIlk7s-DW-CskVwjA_mE0vI1YK";
+const headers = {apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json"};
+let kodeTerakhir = "";
+let opItems = [];
+
+function showTab(t){
+  document.getElementById("tabBuat").style.display = t==="buat" ? "block" : "none";
+  document.getElementById("tabOpname").style.display = t==="opname" ? "block" : "none";
+  document.getElementById("tabBtnBuat").className = "tab"+(t==="buat"?" active":"");
+  document.getElementById("tabBtnOpname").className = "tab"+(t==="opname"?" active":"");
+  if(t==="opname") loadRiwayat();
 }
-function parseQRData(raw){
-  // Return {kode, blok, rak}
-  let s=String(raw||'').trim();
-  if(s.includes('|')){
-    let parts=s.split('|');
-    return {kode:parts[0].trim(), blok:(parts[1]||'').trim(), rak:(parts[2]||'').trim()};
-  }
-  return {kode:s, blok:'', rak:''};
+function tambahBarang(kode="", desc=""){
+  const div=document.createElement("div"); div.className="item-row";
+  div.innerHTML=`<input placeholder="Kode Barang, ex: LSF-CAP2" value="${kode}" class="item-no"><input placeholder="Nama Barang" value="${desc}" class="item-desc"><button style="width:40px;margin:0;background:#fee2e2" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById("items").appendChild(div);
 }
-function onPerusahaanCabangChange(){
-  let per=document.getElementById('perusahaan').value; let cab=document.getElementById('cabang').value;
-  let jenisAvail=[...new Set(WH.filter(w=>w.per===per && w.cabang===cab).map(w=>w.jenis))];
-  jenisAvail.sort((a,b)=> jenisList.indexOf(a)-jenisList.indexOf(b));
-  let cur=document.getElementById('jenisGudang').value;
-  document.getElementById('jenisGudang').innerHTML=jenisAvail.map(j=>`<option>${j}</option>`).join('');
-  if(jenisAvail.includes(cur)) document.getElementById('jenisGudang').value=cur;
-  else if(jenisAvail.includes('Reguler/Barang Bagus')) document.getElementById('jenisGudang').value='Reguler/Barang Bagus';
-  onJenisChange();
+tambahBarang();
+function buatKode(){
+  const lokasi=document.getElementById("lokasi").value.trim().toUpperCase();
+  const rak=document.getElementById("rak").value.trim().toUpperCase();
+  const lantai=document.getElementById("lantai").value;
+  const posisi=document.getElementById("posisi").value;
+  if(!lokasi||!rak) return null;
+  return `${lokasi}-${rak}-L${lantai}${posisi}`;
 }
-function onJenisChange(){
-  let per=document.getElementById('perusahaan').value; let cab=document.getElementById('cabang').value; let jenis=document.getElementById('jenisGudang').value;
-  let list=WH.filter(w=>w.per===per && w.cabang===cab && w.jenis===jenis);
-  document.getElementById('warehouse').innerHTML=list.map(w=>`<option value="${w.code}">${w.code} - ${w.name}</option>`).join('');
-  onWarehouseChange();
+function generateQR(){
+  const kode=buatKode(); if(!kode){alert("Isi Lokasi dan Rak dulu!");return;}
+  const perusahaan=document.getElementById("perusahaan").value;
+  const gudang=document.getElementById("gudang").value;
+  const ket=document.getElementById("keterangan").value;
+  kodeTerakhir=kode;
+  document.getElementById("hasil").style.display="block";
+  document.getElementById("kodeRak").innerText=kode;
+  document.getElementById("detailRak").innerText=`${perusahaan} | ${gudang} | ${ket||""}`;
+  const barangs=[...document.querySelectorAll(".item-no")].map((el,i)=>{const d=document.querySelectorAll(".item-desc")[i].value; return el.value?`• ${el.value} ${d?"- "+d:""}`:"";}).filter(Boolean);
+  document.getElementById("listBarang").innerHTML=barangs.join("<br>")||"Rak masih kosong - isi barang pas mapping";
+  document.getElementById("qrcode").innerHTML="";
+  new QRCode(document.getElementById("qrcode"),{text:`${BASE_URL}/?rak=${kode}`,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});
+  document.getElementById("hasil").scrollIntoView({behavior:"smooth"});
 }
-function onWarehouseChange(){
-  let wh=document.getElementById('warehouse').value; let jenis=document.getElementById('jenisGudang').value; let cab=document.getElementById('cabang').value; let per=document.getElementById('perusahaan').value;
-  let w=WH.find(x=>x.per===per && x.cabang===cab && x.code===wh);
-  document.getElementById('whInfo').innerText = w ? `✅ Dipilih: ${w.code} - ${w.name} • Jenis: ${jenis} • ${cab} • ${per}` : '';
-  updateKPI(); render();
-}
-function getTotalMaster(per,cab,jenis){
-  if(jenis !== 'Reguler/Barang Bagus') return 0;
-  let total=0;
-  for(let k of masterKeys){
-    let e=masterV2[k];
-    if(!e.c || !e.c[per] || e.c[per][cab]===undefined) continue;
-    total++;
-  }
-  return total;
-}
-function updateKPI(){
-  let per=document.getElementById('perusahaan').value;
-  let cab=document.getElementById('cabang').value;
-  let wh=document.getElementById('warehouse').value;
-  let jenis=document.getElementById('jenisGudang').value;
-  let total=getTotalMaster(per,cab,jenis);
-  let rows=liveData.filter(r=> normalizeCabang(r.Opname)===cab && r.Perusahaan===per && (r.Lokasi||'').toUpperCase()===(wh||'').toUpperCase());
-  let okCount=rows.filter(r=> r.Status==='OK').length;
-  let perluHit2=rows.filter(r=> r.Status==='PERLU HIT2').length;
-  let perluVal=rows.filter(r=> r.Status==='PERLU VALIDASI').length;
-  let sudahAdaHit1=rows.length;
-  let belum=Math.max(0, total - sudahAdaHit1);
-  let perlu=perluHit2+perluVal;
-  let persen=total>0?Math.round(okCount/total*100):0;
-  document.getElementById('kpiTotal').innerText=total.toLocaleString('id-ID');
-  document.getElementById('kpiTotalSub').innerText = jenis!=='Reguler/Barang Bagus' ? 'Master belum ada - hanya Reguler' : `${per} • ${cab} • ${wh}`;
-  document.getElementById('kpiSudah').innerText=okCount.toLocaleString('id-ID');
-  document.getElementById('kpiPerlu').innerText=perlu.toLocaleString('id-ID');
-  document.getElementById('kpiPersen').innerText=persen+'%';
-  document.getElementById('kpiBar').style.width=persen+'%';
-  let progressEl=document.getElementById('progress');
-  if(progressEl) progressEl.innerText=`📊 ${wh} ${jenis} — Total Master: ${total} • Sudah OK: ${okCount} • Perlu HIT2: ${perluHit2} • Perlu VALIDASI: ${perluVal} • Belum Dihitung: ${belum}`;
-}
-async function openScan(){ document.getElementById('scanModal').style.display='block'; document.getElementById('scanMsg').innerText='Membuka kamera...'; try{ html5Qr=new Html5Qrcode("reader"); await html5Qr.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:260}},(t)=>{onBarcodeScanned(t);},()=>{}); scanning=true; document.getElementById('scanMsg').innerText='Kamera aktif...'; }catch(e){ document.getElementById('scanMsg').innerText='❌ '+e.message; } }
-async function closeScan(){ try{ if(html5Qr && scanning){ await html5Qr.stop(); await html5Qr.clear(); } }catch(e){} scanning=false; html5Qr=null; document.getElementById('scanModal').style.display='none'; }
-async function onBarcodeScanned(raw){
-  let parsed=parseQRData(raw);
-  let code=parsed.kode;
-  if(!code) return;
-  let matched=findKodeByBarcode(code);
-  let finalKode=matched||code;
-  await closeScan();
-  document.getElementById('kode').value=finalKode;
-  // QR baru ada Blok & Rak -> otomatis isi Blok & Rak di OPNAME
-  if(parsed.blok) document.getElementById('blok').value=parsed.blok;
-  if(parsed.rak) document.getElementById('rak').value=parsed.rak;
-  document.getElementById('saranKode').style.display='none';
-  onKodeChange();
-  if(!matched) alert('Terbaca: '+code+'\nTidak ketemu di Master.');
-  document.getElementById('qty').focus();
-}
-function parseDetail(d){ let map={}; let order=[]; if(!d) return {map,order}; let parts=d.match(/[^(,]+?\([^)]+\)/g)||[]; parts.forEach(p=>{ let m=p.trim().match(/^(.+)\((.+)\)$/); if(!m) return; let name=m[1].trim(); let nums=m[2].trim().split('+').map(x=>Number(x.trim())||0); let key=name.toUpperCase(); if(!map[key]){ order.push(key); map[key]={name:name,parts:[]}; } map[key].parts=map[key].parts.concat(nums); }); return {map,order}; }
-function formatDetail(map,order){ return order.map(k=>`${map[k].name}(${map[k].parts.join('+')})`).join(', '); }
-function totalDetail(d){ let {map,order}=parseDetail(d); let t=0; order.forEach(k=>{ t+=map[k].parts.reduce((a,b)=>a+b,0); }); return t; }
-function getUserQty(d,u){ let {map}=parseDetail(d); let e=map[u.toUpperCase()]; if(!e) return 0; return e.parts.reduce((a,b)=>a+b,0); }
-function getUserDetailText(d,u){ let {map}=parseDetail(d); let e=map[u.toUpperCase()]; if(!e) return ''; return `${e.name}(${e.parts.join('+')})`; }
-function updateDetailHit(detailStr,userName,qty){ let {map,order}=parseDetail(detailStr); let kc=userName.toUpperCase(); if(map[kc]){ map[kc].parts.push(qty); map[kc].name=userName; } else { order.push(kc); map[kc]={name:userName,parts:[qty]}; } let detail=formatDetail(map,order); return {detail,total:totalDetail(detail)}; }
-async function loadAll(showMsg){
+async function simpanRak(){
+  if(!kodeTerakhir){alert("Generate QR dulu!");return;}
+  const el=document.getElementById("simpanStatus"); el.innerHTML="Menyimpan...";
+  const data={kode_rak:kodeTerakhir,perusahaan:document.getElementById("perusahaan").value,gudang:document.getElementById("gudang").value,lokasi:document.getElementById("lokasi").value.trim().toUpperCase(),rak:document.getElementById("rak").value.trim().toUpperCase(),lantai:parseInt(document.getElementById("lantai").value),posisi:document.getElementById("posisi").value,keterangan:document.getElementById("keterangan").value,qr_url:`${BASE_URL}/?rak=${kodeTerakhir}`,dibuat_oleh:"Admin Gudang"};
   try{
-    let r1=await fetch(API_URL+'?action=getMaster').then(r=>r.json());
-    if(r1.ok){
-      masterV2={}; let qmap={};
-      r1.master.forEach(row=>{
-        let [kode,nama,per,cab,sap]=row;
-        let ck=cleanKode(kode);
-        let ncab=normalizeCabang(cab);
-        if(!masterV2[ck]) masterV2[ck]={n:nama,c:{CUI:{},PAU:{}}};
-        if(nama && !masterV2[ck].n) masterV2[ck].n=nama;
-        if(!masterV2[ck].c[per]) masterV2[ck].c[per]={};
-        masterV2[ck].c[per][ncab]=Number(sap)||0;
-        let bkey=per+'||'+String(kode).trim();
-        if(!qmap[bkey]) qmap[bkey]={kode:String(kode).trim(),nama:nama,per:per,stok:{}};
-        qmap[bkey].stok[ncab]=Number(sap)||0;
-      });
-      masterKeys=Object.keys(masterV2);
-      allQRItems=Object.values(qmap);
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/racks`,{method:"POST",headers:{...headers,Prefer:"return=minimal"},body:JSON.stringify(data)});
+    if(!res.ok){const txt=await res.text(); if(txt.includes("duplicate")||res.status===409){el.innerHTML=`<span class="err">⚠️ Rak ${kodeTerakhir} sudah ada.</span>`;return;} throw new Error(txt);}
+    const items=[...document.querySelectorAll(".item-no")].map((inp,i)=>{const desc=document.querySelectorAll(".item-desc")[i].value; return inp.value?{kode_rak:kodeTerakhir,item_no:inp.value.trim().toUpperCase(),item_description:desc}:null;}).filter(Boolean);
+    if(items.length){await fetch(`${SUPABASE_URL}/rest/v1/rack_items`,{method:"POST",headers:{...headers,Prefer:"return=minimal"},body:JSON.stringify(items)});}
+    el.innerHTML=`<span class="ok">✅ Tersimpan: ${kodeTerakhir}</span>`; loadDaftar();
+  }catch(e){el.innerHTML=`<span class="err">❌ Gagal: ${e.message}</span>`;}
+}
+async function loadDaftar(){
+  const div=document.getElementById("daftar"); const st=document.getElementById("status");
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/racks?select=kode_rak,perusahaan,gudang,created_at&order=created_at.desc&limit=50`,{headers});
+    if(!res.ok) throw new Error(await res.text());
+    const list=await res.json();
+    st.innerHTML=`<span class="ok">✅ Tersambung ke Supabase - ${list.length} rak</span>`;
+    div.innerHTML=list.length?list.map(x=>`✅ <b>${x.kode_rak}</b> - ${x.perusahaan} - <a href="?rak=${x.kode_rak}">${x.kode_rak} → Opname</a><br>`).join(""):"Belum ada rak.";
+  }catch(e){st.innerHTML=`<span class="err">❌ Belum tersambung: ${e.message}</span>`; div.innerHTML="Gagal load.";}
+}
+async function loadOpname(){
+  const kode=document.getElementById("opRak").value.trim().toUpperCase();
+  if(!kode){alert("Isi kode rak dulu!");return;}
+  const info=document.getElementById("opInfo"); info.innerHTML="Mencari...";
+  try{
+    const r1=await fetch(`${SUPABASE_URL}/rest/v1/racks?kode_rak=eq.${encodeURIComponent(kode)}&select=*`,{headers});
+    const racks=await r1.json();
+    const r2=await fetch(`${SUPABASE_URL}/rest/v1/rack_items?kode_rak=eq.${encodeURIComponent(kode)}&select=*&order=id.asc`,{headers});
+    const items=await r2.json();
+    if(!racks.length){info.innerHTML=`<span class="err">Rak ${kode} tidak ditemukan di Supabase.</span>`; document.getElementById("opTable").innerHTML=""; return;}
+    const r=racks[0];
+    info.innerHTML=`<b>${r.kode_rak}</b> • ${r.perusahaan} • ${r.gudang} • ${r.keterangan||""}`;
+    opItems=items;
+    if(!items.length){
+      document.getElementById("opTable").innerHTML=`<p style="font-size:13px">Rak ini belum ada barangnya. Tambah manual:</p><div class="row"><div><input id="manualNo" placeholder="Kode Barang"></div><div><input id="manualDesc" placeholder="Nama Barang"></div></div><button class="btn-white" onclick="tambahManual()">+ Tambah Baris</button>`;
+      document.getElementById("btnSimpanOpname").style.display="block";
+      renderOpTable(); return;
     }
-    let r2=await fetch(API_URL+'?action=getLive').then(r=>r.json());
-    if(r2.ok){
-      liveData=r2.live.map(row=>({Opname:row[0],Perusahaan:row[1],Lokasi:row[2],'Kode Item':row[3],'Deskripsi Item':row[4],'Nama Item':row[5],'Hit-1 Total':Number(row[6])||0,'Hit-1 Detail':row[7]||'','Hit-2 Total':Number(row[8])||0,'Hit-2 Detail':row[9]||'','Qty Validasi':Number(row[10])||0,'Validasi Detail':row[11]||'','Final Qty':Number(row[12])||0,SAP:0,Selisih:0,Status:row[15]||'','Waktu Update':row[16]||'',JenisGudang:row[17]||'',Blok:row[18]||'',Rak:row[19]||''}));
-    }
-    document.getElementById('kodeCount').innerText=`Total Master Global: ${masterKeys.length} kode. Pilih Perusahaan + Cabang untuk lihat Total Master per Cabang.`;
-    updateKPI(); render(); renderQR();
-  }catch(e){}
+    renderOpTable();
+    document.getElementById("btnSimpanOpname").style.display="block";
+  }catch(e){info.innerHTML=`<span class="err">Gagal: ${e.message}</span>`;}
 }
-async function kirimKeSheet(ent){ let payload={Opname:ent.Opname,Perusahaan:ent.Perusahaan,Lokasi:ent.Lokasi,Kode:ent['Kode Item'],Nama:ent['Nama Item'],Hit1Detail:ent['Hit-1 Detail'],Hit1Total:ent['Hit-1 Total'],Hit2Detail:ent['Hit-2 Detail'],Hit2Total:ent['Hit-2 Total'],Validasi:ent['Qty Validasi'],ValidasiDetail:ent['Validasi Detail'],Final:ent['Final Qty'],JenisGudang:ent.JenisGudang||'',Blok:ent.Blok||'',Rak:ent.Rak||''}; await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}); }
-function onKodeInput(){ let q=document.getElementById('kode').value.trim().toUpperCase(); let box=document.getElementById('saranKode'); if(q.length<2){ box.style.display='none'; return; } let hasil=[]; for(let k of masterKeys){ if(hasil.length>=100) break; let e=masterV2[k]; if(k.includes(q)||(e.n||'').toUpperCase().includes(q)) hasil.push({kode:k,nama:e.n||''}); } hasil.sort((a,b)=>{ let aS=a.kode.startsWith(q)?0:1; let bS=b.kode.startsWith(q)?0:1; if(aS!==bS) return aS-bS; return a.kode.localeCompare(b.kode); }); if(!hasil.length){ box.innerHTML=`<div>Tidak ketemu "${q}"</div>`; box.style.display='block'; return; } box.innerHTML=hasil.map(h=>`<div onclick="pilihKode('${h.kode.replace(/'/g,'')}')"><b>${h.kode}</b> — ${shortDesc(h.nama,70)}</div>`).join(''); box.style.display='block'; if(masterV2[cleanKode(q)]) onKodeChange(); }
-function pilihKode(kode){ document.getElementById('kode').value=kode; document.getElementById('saranKode').style.display='none'; onKodeChange(); document.getElementById('qty').focus(); }
-function onKodeChange(){ let kode=document.getElementById('kode').value.trim(); let cabang=document.getElementById('cabang').value; let per=document.getElementById('perusahaan').value; let wh=document.getElementById('warehouse').value; if(!kode) return; let nama=getMasterNama(cabang,kode,per); document.getElementById('nama').value=nama||document.getElementById('nama').value; document.getElementById('infoBarang').style.display='block'; document.getElementById('infoKode').innerText=kode.toUpperCase(); document.getElementById('infoNama').innerText=nama||'⚠️ Nama tidak ketemu'; document.getElementById('infoCabang').innerText=`${cabang} • ${per} • ${wh} • Blok ${document.getElementById('blok').value} • Rak ${document.getElementById('rak').value}`; let ent=liveData.find(x=>normalizeCabang(x.Opname)===cabang && x.Perusahaan===per && cleanKode(x['Kode Item'])===cleanKode(kode) && (x.Lokasi||'').toUpperCase()===wh.toUpperCase()); document.getElementById('infoSudah').innerText=ent?`Sudah: Hit1=${ent['Hit-1 Detail']||'-'} = ${ent['Hit-1 Total']} | Hit2=${ent['Hit-2 Detail']||'-'} = ${ent['Hit-2 Total']} | Validasi=${ent['Qty Validasi']}`:'Belum pernah dihitung'; if(ent && ent['Nama Item']) document.getElementById('nama').value=ent['Nama Item']; document.getElementById('infoStatus').innerText = ent ? (ent.Status==='OK' ? '✅ SUDAH OK - Tidak perlu HIT2 / VALIDASI' : ent['Hit-1 Detail'] ? '⚠️ Perlu HIT2 - HIT1 belum klop' : '') : ''; document.getElementById('infoStatus').style.color = ent && ent.Status==='OK' ? '#16a34a' : '#dc2626'; }
-function getOrCreate(op,cabang,perusahaan,kodeRaw,wh,deskripsiManual,jenis,blok,rak){ let kc=cleanKode(kodeRaw); let ent=liveData.find(x=>normalizeCabang(x.Opname).toUpperCase()===normalizeCabang(op).toUpperCase() && x.Perusahaan===perusahaan && cleanKode(x['Kode Item'])===kc && (x.Lokasi||'').toUpperCase()===wh.toUpperCase()); let mNama=getMasterNama(cabang,kodeRaw,perusahaan); if(!ent){ ent={Opname:op,Perusahaan:perusahaan,Lokasi:wh,'Kode Item':kodeRaw,'Deskripsi Item':deskripsiManual||mNama,'Nama Item':deskripsiManual||mNama,'Hit-1 Total':0,'Hit-1 Detail':'','Hit-2 Total':0,'Hit-2 Detail':'','Qty Validasi':0,'Validasi Detail':'','Final Qty':0,SAP:0,Selisih:0,Status:'','Waktu Update':'',JenisGudang:jenis,Blok:blok,Rak:rak}; liveData.push(ent); } ent.JenisGudang=jenis; ent.Blok=blok; ent.Rak=rak; return ent; }
-async function simpanHit(){
-  let namaKaryawan=document.getElementById('karyawan').value.trim().toUpperCase(); let cabang=document.getElementById('cabang').value; let perusahaan=document.getElementById('perusahaan').value; let jenis=document.getElementById('jenisGudang').value; let wh=document.getElementById('warehouse').value; let blok=document.getElementById('blok').value.trim(); let rak=document.getElementById('rak').value.trim(); let kode=document.getElementById('kode').value.trim(); let qty=parseInt(document.getElementById('qty').value); let tipe=document.getElementById('tipe').value; let namaManual=document.getElementById('nama').value.trim();
-  if(!namaKaryawan){ alert('Isi Nama Karyawan'); return; } document.getElementById('karyawan').value=namaKaryawan;
-  if(!wh){ alert('Pilih Warehouse dulu'); return; }
-  if(!blok){ alert('Isi Blok dulu'); return; }
-  if(!rak){ alert('Isi Rak dulu'); return; }
-  if(!kode||isNaN(qty)){ alert('Pilih Kode + isi Qty'); return; }
-  let ent=getOrCreate(cabang,cabang,perusahaan,kode,wh,namaManual||getMasterNama(cabang,kode,perusahaan),jenis,blok,rak);
-  if(namaManual){ ent['Nama Item']=namaManual; ent['Deskripsi Item']=namaManual; }
-  let sap=getMasterSAP(cabang,kode,perusahaan);
-  if(ent.Status==='OK'){ alert(`✅ ${kode} sudah OK. Tidak perlu ${tipe} lagi.`); return; }
-  if(Number(ent['Qty Validasi'])>0 && tipe!=='VALIDASI'){ alert(`🔒 ${kode} sudah VALIDASI - Terkunci`); return; }
-  if(tipe==='HIT2'){
-    if(!ent['Hit-1 Detail']){ alert(`⛔ HIT2 belum bisa. HIT1 untuk ${kode} belum ada.`); return; }
-    if(Number(ent['Hit-1 Total'])===sap){ alert(`✅ ${kode} sudah OK dari HIT1. Tidak perlu HIT2.`); return; }
-  }
-  if(tipe==='VALIDASI'){
-    if(!ent['Hit-1 Detail'] || !ent['Hit-2 Detail']){ alert(`⛔ VALIDASI belum bisa. HIT1 & HIT2 belum lengkap.`); return; }
-    if(Number(ent['Hit-1 Total'])===Number(ent['Hit-2 Total'])){ alert(`✅ HIT1 = HIT2. Sudah OK, tidak perlu VALIDASI.`); return; }
-  }
-  let existingDetail = tipe==='HIT1'?ent['Hit-1 Detail']:tipe==='HIT2'?ent['Hit-2 Detail']:'';
-  let prevQty=getUserQty(existingDetail,namaKaryawan); let prevText=getUserDetailText(existingDetail,namaKaryawan);
-  if(existingDetail && existingDetail.toUpperCase().includes(namaKaryawan.toUpperCase()+'(')){ pending={ent,tipe,qty,namaKaryawan,sap}; let newTotal=prevQty+qty; let newDetail=prevText.replace(')', '+'+qty+')'); document.getElementById('pendingText').innerHTML=`<b>@${namaKaryawan}</b> sudah input <b>${kode}</b> ${prevText} = <b>${prevQty}</b>.<br>Input baru <b>${qty}</b> → Jadi <b>${newDetail} = ${newTotal}</b>`; document.getElementById('btnTambah').innerText=`OK — TAMBAH (Jadi ${newTotal})`; document.getElementById('pendingBox').style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); return; }
-  await applyHit(ent,tipe,namaKaryawan,qty,sap);
-}
-async function applyHit(ent,tipe,namaKaryawan,qty,sap){
-  if(sap===undefined) sap=getMasterSAP(ent.Opname,ent['Kode Item'],ent.Perusahaan);
-  if(tipe==='HIT1'){ let u=updateDetailHit(ent['Hit-1 Detail']||'',namaKaryawan,qty); ent['Hit-1 Detail']=u.detail; ent['Hit-1 Total']=u.total; }
-  else if(tipe==='HIT2'){ let u=updateDetailHit(ent['Hit-2 Detail']||'',namaKaryawan,qty); ent['Hit-2 Detail']=u.detail; ent['Hit-2 Total']=u.total; }
-  else { ent['Qty Validasi']=qty; ent['Validasi Detail']=`${namaKaryawan}(${qty})`; }
-  let h1=Number(ent['Hit-1 Total'])||0,h2=Number(ent['Hit-2 Total'])||0,qv=Number(ent['Qty Validasi'])||0;
-  ent['Final Qty']=qv>0?qv:h2>0?h2:h1;
-  if(qv>0) ent.Status='OK';
-  else if(h2>0 && h1===h2) ent.Status='OK';
-  else if(h1>0 && h1===sap) ent.Status='OK';
-  else if(h1>0) ent.Status='PERLU HIT2';
-  else ent.Status='';
-  if(h2>0 && h1!==h2 && qv===0) ent.Status='PERLU VALIDASI';
-  try{ await kirimKeSheet(ent); }catch(e){}
-  document.getElementById('kode').value=''; document.getElementById('qty').value=''; document.getElementById('nama').value=''; document.getElementById('infoBarang').style.display='none'; document.getElementById('saranKode').style.display='none'; render(); updateKPI(); await loadAll(false);
-  let msg = ent.Status==='OK' ? `✅ ${ent['Kode Item']} SUDAH OK - Selesai` : ent.Status==='PERLU HIT2' ? `⚠️ ${ent['Kode Item']} Perlu HIT2` : `⚠️ ${ent['Kode Item']} Perlu VALIDASI`;
-  alert(`@${namaKaryawan} ${ent.Perusahaan} ${ent.Lokasi} Blok ${ent.Blok} Rak ${ent.Rak} ${ent['Kode Item']} Final ${ent['Final Qty']} — ${msg}`);
-}
-function confirmDouble(ok){ document.getElementById('pendingBox').style.display='none'; if(!ok||!pending){ pending=null; return; } applyHit(pending.ent,pending.tipe,pending.namaKaryawan,pending.qty,pending.sap); pending=null; }
-function render(){ let fc=document.getElementById('filterCabang').value||'ALL'; let fp=document.getElementById('filterPer').value||'ALL'; let cari=(document.getElementById('cari').value||'').toUpperCase(); let rows=liveData.filter(r=>{ if(fc!=='ALL' && normalizeCabang(r.Opname)!==fc) return false; if(fp!=='ALL' && r.Perusahaan!==fp) return false; if(cari && !(String(r['Kode Item']).toUpperCase().includes(cari)||String(r['Nama Item']).toUpperCase().includes(cari)||String(r.Lokasi).toUpperCase().includes(cari)||String(r.Blok||'').toUpperCase().includes(cari)||String(r.Rak||'').toUpperCase().includes(cari))) return false; return true; }); document.getElementById('tbody').innerHTML=rows.map(r=>{ let cls=r.Status==='OK'?'ok':'warn'; if(Number(r['Qty Validasi'])>0) cls='lock'; let statusText=r.Status==='OK'?'✅ OK':r.Status==='PERLU HIT2'?'⚠️ PERLU HIT2':r.Status==='PERLU VALIDASI'?'🔒 PERLU VALIDASI':r.Status; return `<tr><td>${r.Opname}</td><td>${r.Perusahaan}</td><td>${r.JenisGudang||'-'}</td><td><b>${r.Lokasi}</b></td><td>${r.Blok||'-'}</td><td>${r.Rak||'-'}</td><td><b>${r['Kode Item']}</b></td><td>${shortDesc(r['Nama Item'])}</td><td>${r['Hit-1 Detail']||'-'}</td><td><b>${r['Hit-1 Total']}</b></td><td>${r['Hit-2 Detail']||'-'}</td><td><b>${r['Hit-2 Total']}</b></td><td>${r['Validasi Detail']||r['Qty Validasi']||'-'}</td><td><b>${r['Final Qty']}</b></td><td><span class="badge ${cls}">${statusText}</span></td><td>${r['Waktu Update']||''}</td></tr>`; }).join(''); }
-function renderQR(){
-  let per=document.getElementById('qrPer').value; let cab=document.getElementById('qrCabang').value; let cari=(document.getElementById('qrCari').value||'').toUpperCase();
-  let qrBlok=(document.getElementById('qrBlok').value||'').trim(); let qrRak=(document.getElementById('qrRak').value||'').trim();
-  let rows=allQRItems.filter(it=>{
-    if(per!=='ALL' && it.per!==per) return false;
-    if(it.stok && it.stok[cab]===undefined) return false;
-    if(cari && !(it.kode.toUpperCase().includes(cari)||it.nama.toUpperCase().includes(cari))) return false;
-    return true;
+function renderOpTable(){
+  if(!opItems.length){document.getElementById("opTable").innerHTML="<p style='font-size:13px'>Belum ada barang. Tambah manual di atas.</p>"; return;}
+  let html=`<table><tr><th>Kode</th><th>Nama</th><th>Qty Sistem</th><th>Qty Fisik</th><th>Catatan</th></tr>`;
+  opItems.forEach((it,i)=>{
+    html+=`<tr><td>${it.item_no}</td><td>${it.item_description||""}</td><td><input id="qs_${i}" type="number" value="0" style="width:70px"></td><td><input id="qf_${i}" type="number" value="0" style="width:70px"></td><td><input id="ct_${i}" placeholder="-" style="width:90px"></td></tr>`;
   });
-  let show=rows.slice(0,300);
-  document.getElementById('qrInfo').innerText='Menampilkan '+show.length+' dari '+rows.length+' item. Perusahaan: '+per+' • Cabang: '+cab+' • Blok: '+qrBlok+' • Rak: '+qrRak+' • QR = Kode|Blok|Rak, stok SAP tidak ditampilkan.';
-  document.getElementById('qrList').innerHTML=show.map((it)=>{
-    let safe=it.nama.replace(/</g,'').replace(/>/g,'').substring(0,60);
-    let qrData = it.kode + '|' + qrBlok + '|' + qrRak;
-    let qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data='+encodeURIComponent(qrData);
-    return `<div class="qitem"><b>${it.kode}</b><small>${safe} • ${it.per} • ${cab}</small><img src="${qrUrl}" alt="QR ${it.kode}"><div class="qblok">📍 BLOK: ${qrBlok||'-'}</div><div class="qrak">🗄️ RAK: ${qrRak||'-'}</div><div class="qcut">✂️ Gunting di sini • Tempel di Rak</div></div>`;
-  }).join('');
+  html+=`</table>`;
+  const existing=document.getElementById("manualBox");
+  document.getElementById("opTable").innerHTML=html;
 }
-function autoRefreshToggle(){ autoOn=!autoOn; document.getElementById('autoTxt').innerText=autoOn?'ON':'OFF'; if(autoOn) startAuto(); else clearInterval(autoTimer); }
-function startAuto(){ clearInterval(autoTimer); autoTimer=setInterval(()=>{ if(autoOn) loadAll(false); }, 10000); }
-document.getElementById('cabang').innerHTML=cabangList.map(c=>`<option>${c}</option>`).join('');
-document.getElementById('filterCabang').innerHTML=`<option>ALL</option>`+cabangList.map(c=>`<option>${c}</option>`).join('');
-document.getElementById('qrCabang').innerHTML=cabangList.map(c=>`<option>${c}</option>`).join('');
-document.getElementById('jenisGudang').innerHTML=jenisList.map(j=>`<option>${j}</option>`).join('');
-onPerusahaanCabangChange();
-loadAll(false); startAuto();
-document.addEventListener('click',e=>{ if(e.target.id!=='kode' && !e.target.closest('#saranKode')) document.getElementById('saranKode').style.display='none'; });
+function tambahManual(){
+  const no=document.getElementById("manualNo").value.trim().toUpperCase();
+  const desc=document.getElementById("manualDesc").value.trim();
+  if(!no){alert("Isi kode barang!");return;}
+  opItems.push({item_no:no,item_description:desc});
+  renderOpTable();
+  document.getElementById("manualNo").value=""; document.getElementById("manualDesc").value="";
+}
+async function simpanOpname(){
+  const kode=document.getElementById("opRak").value.trim().toUpperCase();
+  const op=document.getElementById("opOperator").value||"Admin Gudang";
+  const el=document.getElementById("opStatus"); el.innerHTML="Menyimpan...";
+  const rows=opItems.map((it,i)=>{
+    const qs=parseInt(document.getElementById(`qs_${i}`)?.value||0);
+    const qf=parseInt(document.getElementById(`qf_${i}`)?.value||0);
+    const ct=document.getElementById(`ct_${i}`)?.value||"";
+    return {kode_rak:kode,item_no:it.item_no,item_description:it.item_description||"",qty_sistem:qs,qty_fisik:qf,selisih:qf-qs,operator:op,catatan:ct};
+  });
+  if(!rows.length){el.innerHTML=`<span class="err">Belum ada barang.</span>`;return;}
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/opname_logs`,{method:"POST",headers:{...headers,Prefer:"return=minimal"},body:JSON.stringify(rows)});
+    if(!res.ok) throw new Error(await res.text());
+    el.innerHTML=`<span class="ok">✅ Opname ${kode} tersimpan (${rows.length} item)</span>`; loadRiwayat();
+  }catch(e){el.innerHTML=`<span class="err">❌ Gagal: ${e.message} - Cek tabel opname_logs sudah ada belum.</span>`;}
+}
+async function loadRiwayat(){
+  const div=document.getElementById("riwayat");
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/opname_logs?select=kode_rak,item_no,qty_fisik,qty_sistem,selisih,operator,created_at&order=created_at.desc&limit=20`,{headers});
+    if(!res.ok) throw new Error(await res.text());
+    const list=await res.json();
+    div.innerHTML=list.length?list.map(x=>`✅ <b>${x.kode_rak}</b> ${x.item_no} Fisik:${x.qty_fisik} Sistem:${x.qty_sistem} Selisih:${x.selisih} - ${x.operator}<br>`).join(""):"Belum ada opname.";
+  }catch(e){div.innerHTML="Gagal load riwayat. Cek tabel opname_logs.";}
+}
+loadDaftar(); loadRiwayat();
+const params=new URLSearchParams(location.search);
+const rakParam=params.get("rak");
+if(rakParam){ document.getElementById("opRak").value=rakParam.toUpperCase(); showTab("opname"); loadOpname(); }
 </script>
 </body>
 </html>
