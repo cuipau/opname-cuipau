@@ -31,6 +31,11 @@
     @media(max-width:1100px){.session-grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.filter-grid{grid-template-columns:2fr 1fr 1fr}.qr-form{grid-template-columns:1fr 1fr 1fr}.cycle-grid{grid-template-columns:1fr 1fr}.item-row{grid-template-columns:1fr 130px 110px}.item-row .metric.system{display:none}.login-screen{grid-template-columns:440px 1fr}.visual-copy h2{font-size:34px}}
     @media(max-width:767px){.login-screen{display:block}.login-panel{min-height:100dvh;padding:28px 22px}.login-logo{width:135px;margin-bottom:24px}.login-panel h1{font-size:28px}.login-visual{display:none}.sidebar{inset:auto 0 0;width:100%;height:70px;padding:4px 5px;border-top:1px solid #ffffff22}.brand,.nav-label,.sidebar-foot{display:none}.sidebar nav{display:flex;height:100%;overflow-x:auto}.nav{min-width:72px;flex:1;flex-direction:column;justify-content:center;gap:3px;margin:0;padding:4px;font-size:10px;text-align:center}.nav span{font-size:18px}.nav.active{background:transparent;color:var(--yellow);border-top:3px solid var(--yellow)}.workspace{margin-left:0;padding-bottom:78px}.topbar{height:56px;padding:0 14px}.breadcrumb{display:none}.account-email{max-width:160px}main{padding:18px 14px}.page-head{display:block}.page-head h1{font-size:24px}.workflow{overflow-x:auto;grid-template-columns:repeat(5,100px);padding-bottom:6px}.panel{padding:16px}.panel-head,.session-banner,.scan-bar{align-items:flex-start;flex-direction:column}.session-grid,.session-open,.stats,.filter-grid,.qr-form,.cycle-grid,.cycle-list,.guide-grid,.qr-output,.two-col{grid-template-columns:1fr}.session-actions{justify-content:stretch}.session-actions button,.button-row button,.scan-bar button{width:100%}.item-row{grid-template-columns:1fr auto}.item-row .metric{display:none}.count-btn{min-width:92px}.cycle-card{align-items:flex-start;flex-direction:column}.cycle-card button{width:100%}.manual-scan{grid-template-columns:1fr}#toast{left:14px;right:14px;bottom:86px}.data-table{font-size:13px}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}@media print{.sidebar,.topbar,.page-head,.session-panel,.button-row,footer{display:none!important}.workspace{margin:0}main{padding:0}.panel{border:0;box-shadow:none}}
+    .qr-form{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .qr-form select{min-width:0;text-overflow:ellipsis}
+    #qr-item-status{margin:12px 0 0}
+    @media(max-width:1100px){.qr-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:767px){.qr-form{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -108,8 +113,17 @@
         </section></section>
         <section id="view-qr" class="view" hidden><section class="panel">
           <div class="panel-head"><div><h2>QR item & lokasi</h2><p>Label menyimpan item code, gudang, lokasi, dan rak.</p></div><span class="tag blue">Format QR v1</span></div>
-          <div class="qr-form"><label>Perusahaan<select id="qr-company"></select></label><label>Gudang<select id="qr-warehouse"></select></label><label>Item code<input id="qr-item" list="qr-options" placeholder="Kode barang"><datalist id="qr-options"></datalist></label><label>Lokasi<input id="qr-location" placeholder="Area A"></label><label>Rak<input id="qr-rack" placeholder="A-01"></label><button id="qr-make" class="primary">Buat QR</button></div>
-          <div class="button-row" style="margin-top:12px"><button id="qr-load" class="secondary">Muat item gudang</button></div><div id="qr-output"></div>
+          <div class="qr-form">
+            <label>Perusahaan<select id="qr-company"></select></label>
+            <label>Gudang<select id="qr-warehouse" disabled></select></label>
+            <label>Cari item<input id="qr-search" type="search" placeholder="Kode atau nama barang" disabled></label>
+            <label>Item code<select id="qr-item" aria-describedby="qr-item-status" disabled><option value="">Pilih gudang terlebih dahulu</option></select></label>
+            <label>Lokasi<input id="qr-location" placeholder="Area A"></label>
+            <label>Rak<input id="qr-rack" placeholder="A-01"></label>
+            <button id="qr-make" class="primary" disabled>Buat QR</button>
+          </div>
+          <p id="qr-item-status" class="muted" role="status">Pilih perusahaan dan gudang untuk memuat daftar barang.</p>
+          <div class="button-row" style="margin-top:12px"><button id="qr-load" class="secondary" disabled>Muat ulang item gudang</button></div><div id="qr-output"></div>
         </section></section>
         <section id="view-panduan" class="view" hidden><section class="panel">
           <div class="panel-head"><div><h2>Alur kerja wajib</h2><p>Tahap tidak dapat dilewati.</p></div></div>
@@ -142,6 +156,7 @@
     const today=function(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta'}).format(new Date())};
     const STAGES=[{key:'hit1_active',label:'Hit 1'},{key:'hit1_closed',label:'Hit 1 ditutup'},{key:'hit2_active',label:'Hit 2'},{key:'validation',label:'Validasi'},{key:'completed',label:'Selesai'}];
     let currentUser=null,metaCombos=[],sessions=[],activeSession=null,items=[],events=[],validations=[],cycleItems=[],qrItems=[],selectedItem=null,scanner=null,page=1,view='opname',authReady=false;
+    let qrLoadVersion=0;
     function toast(m){$('toast').textContent=m;$('toast').classList.add('show');setTimeout(function(){$('toast').classList.remove('show')},3200)}
     function setState(m){$('save-state').textContent=m;$('sidebar-state').textContent=m;$('footer-state').textContent=m}
     function showFatal(m){$('fatal').hidden=false;$('fatal').innerHTML='<strong>Perlu tindakan:</strong> '+esc(m)}
@@ -158,7 +173,7 @@
     function totalsForRound(round){const m=new Map();validEvents(round).forEach(function(e){const k=[e.company,e.warehouse_code,e.code].join('||');m.set(k,(m.get(k)||0)+Number(e.qty||0))});return m}
     function countTimes(round){const m=new Map();validEvents(round).forEach(function(e){const k=[e.company,e.warehouse_code,e.code].join('||');m.set(k,(m.get(k)||0)+1)});return m}
     async function login(e){e.preventDefault();$('login-error').hidden=true;$('login-button').disabled=true;$('login-button').textContent='Memeriksa akun…';const r=await sb.auth.signInWithPassword({email:$('login-email').value.trim(),password:$('login-password').value});$('login-button').disabled=false;$('login-button').textContent='Masuk';if(r.error){$('login-error').hidden=false;$('login-error').textContent='Login gagal. Periksa email dan kata sandi, atau hubungi administrator.'}}
-    async function applyAuth(session){if(session&&session.user){currentUser=session.user;$('login-screen').hidden=true;$('app-shell').hidden=false;$('account-email').textContent=currentUser.email||'Pengguna terdaftar';if(!authReady){authReady=true;await loadApp()}}else{currentUser=null;authReady=false;activeSession=null;$('app-shell').hidden=true;$('login-screen').hidden=false}}
+    async function applyAuth(session){if(session&&session.user){currentUser=session.user;$('login-screen').hidden=true;$('app-shell').hidden=false;$('account-email').textContent=currentUser.email||'Pengguna terdaftar';if(!authReady){authReady=true;await loadApp()}}else{currentUser=null;authReady=false;activeSession=null;$('app-shell').hidden=true;$('login-screen').hidden=false;$('qr-company').value='';changeQrCompany()}}
     async function initAuth(){const r=await sb.auth.getSession();await applyAuth(r.data.session);sb.auth.onAuthStateChange(function(e,s){setTimeout(function(){applyAuth(s)},0)})}
     async function loadApp(){hideFatal();setState('Memuat data…');await loadWarehouses();await loadSessions();setView(location.hash.slice(1)||'opname');renderAll();setState('Supabase aktif')}
     async function loadWarehouses(){try{const seen=new Map();let from=0;while(true){const r=await sb.from(TABLE_MASTER).select('perusahaan,cabang,nama_gudang,kode_gudang,jenis_gudang').range(from,from+999);if(r.error)throw r.error;(r.data||[]).forEach(function(x){const k=(x.perusahaan||'')+'||'+(x.kode_gudang||'');if(!seen.has(k))seen.set(k,{company:x.perusahaan||'',branch:x.cabang||'',warehouse:x.nama_gudang||x.kode_gudang||'',warehouseCode:x.kode_gudang||'',type:x.jenis_gudang||''})});if((r.data||[]).length<1000)break;from+=1000;if(from>30000)break}metaCombos=[...seen.values()].sort(function(a,b){return (a.company+a.warehouseCode).localeCompare(b.company+b.warehouseCode)});fillAllSelectors()}catch(e){showFatal('Data gudang tidak dapat dibaca. Jalankan SUPABASE-SETUP.sql lalu login kembali. '+e.message)}}
@@ -194,11 +209,103 @@
     async function handleScan(raw){let code=String(raw||'').trim(),warehouse='',location='';try{const d=JSON.parse(code);code=d.item_code||d.code||code;warehouse=d.warehouse||d.warehouse_code||'';location=[d.location,d.rack].filter(Boolean).join(' · ')}catch(e){}if(warehouse&&warehouse!==activeSession.warehouse_code){$('scan-error').hidden=false;$('scan-error').textContent='QR gudang '+warehouse+', sesi aktif '+activeSession.warehouse_code+'.';return}const i=items.find(function(x){return x.code===code});if(!i){$('scan-error').hidden=false;$('scan-error').textContent='Item '+code+' tidak ditemukan pada gudang sesi.';return}await stopScanner();$('scan-dialog').close();showCount(itemKey(i),location)}
     async function generateCycle(){const combined=$('cycle-warehouse').value,target=Math.max(1,Math.min(100,Number($('cycle-target').value)||20));if(!combined){toast('Pilih perusahaan dan gudang.');return}const p=combined.split('||');setState('Membuat cycle count…');try{const r=await sb.from(TABLE_MASTER).select('perusahaan,cabang,nama_gudang,kode_gudang,manufacture,brand,kode_barang,nama_barang,satuan_jual').eq('perusahaan',p[0]).eq('kode_gudang',p[1]).limit(5000);if(r.error)throw r.error;cycleItems=(r.data||[]).map(normItem).sort(function(a,b){return simpleHash(today()+a.code)-simpleHash(today()+b.code)}).slice(0,target);renderCycle();setState('Supabase aktif');toast(cycleItems.length+' item cycle count disiapkan.')}catch(e){showFatal('Cycle count gagal: '+e.message)}}
     function renderCycle(){$('cycle-date').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Jakarta'});if(!cycleItems.length)return;$('cycle-list').innerHTML=cycleItems.map(function(i,n){const usable=isCounting()&&activeSession.company===i.company&&activeSession.warehouse_code===i.warehouseCode;return '<article class="cycle-card"><div><span class="item-code">'+(n+1)+'. '+esc(i.code)+'</span><strong>'+esc(i.name)+'</strong><small>'+esc(i.warehouseCode)+' · Blind stock</small></div><button class="count-btn" data-cycle-key="'+esc(itemKey(i))+'" '+(usable?'':'disabled')+'>Hitung</button></article>'}).join('')}
-    async function loadQrItems(){const combined=$('qr-warehouse').value;if(!combined){toast('Pilih perusahaan dan gudang.');return}const p=combined.split('||');setState('Memuat item QR…');const r=await sb.from(TABLE_MASTER).select('perusahaan,nama_gudang,kode_gudang,kode_barang,nama_barang,satuan_jual').eq('perusahaan',p[0]).eq('kode_gudang',p[1]).limit(5000);if(r.error){showFatal(r.error.message);return}qrItems=(r.data||[]).map(normItem);$('qr-options').innerHTML=qrItems.map(function(i){return '<option value="'+esc(i.code)+'">'+esc(i.name)+'</option>'}).join('');setState('Supabase aktif');toast(qrItems.length+' item tersedia untuk QR.')}
+    function changeQrCompany(){
+      warehouseOptions('qr-company','qr-warehouse');
+      $('qr-warehouse').value='';
+      $('qr-warehouse').disabled=!$('qr-company').value;
+      return loadQrItems();
+    }
+
+    function renderQrOptions(){
+      const select=$('qr-item');
+      const selectedCode=select.value;
+      const query=$('qr-search').value.trim().toLowerCase();
+      const matches=qrItems.filter(item=>item.code.toLowerCase().includes(query)||item.name.toLowerCase().includes(query));
+      const placeholder=matches.length?'Pilih item code…':'Tidak ada barang';
+      select.innerHTML='<option value="">'+placeholder+'</option>'+matches.map(item=>{
+        const label=item.name?item.code+' · '+item.name:item.code;
+        return '<option value="'+esc(item.code)+'">'+esc(label)+'</option>';
+      }).join('');
+      if(matches.some(item=>item.code===selectedCode))select.value=selectedCode;
+      if(select.value!==selectedCode)$('qr-output').replaceChildren();
+      select.disabled=!matches.length;
+      $('qr-make').disabled=!select.value;
+      $('qr-item-status').textContent=query
+        ?num(matches.length)+' dari '+num(qrItems.length)+' barang cocok.'
+        :qrItems.length?num(qrItems.length)+' barang tersedia di gudang ini.':'Gudang ini belum memiliki daftar barang.';
+    }
+
+    async function loadQrItems(){
+      const version=++qrLoadVersion;
+      const company=$('qr-company').value;
+      const [warehouseCompany,warehouseCode]=$('qr-warehouse').value.split('||');
+      const hasWarehouse=Boolean(currentUser&&company&&company===warehouseCompany&&warehouseCode);
+      const select=$('qr-item');
+      const status=$('qr-item-status');
+
+      qrItems=[];
+      $('qr-search').value='';
+      $('qr-search').disabled=true;
+      $('qr-output').replaceChildren();
+      $('qr-make').disabled=true;
+      $('qr-load').disabled=true;
+      select.disabled=true;
+      select.innerHTML=hasWarehouse
+        ?'<option value="">Memuat daftar barang…</option>'
+        :'<option value="">Pilih gudang terlebih dahulu</option>';
+      status.textContent=hasWarehouse?'Memuat daftar barang…':'Pilih perusahaan dan gudang untuk memuat daftar barang.';
+      if(!hasWarehouse)return;
+
+      const catalog=new Map();
+      const pageSize=1000;
+      let total=Infinity;
+      let offset=0;
+      try{
+        while(offset<total){
+          const response=await sb.from(TABLE_MASTER)
+            .select('kode_barang,nama_barang',offset===0?{count:'exact'}:{})
+            .eq('perusahaan',company)
+            .eq('kode_gudang',warehouseCode)
+            .order('kode_barang')
+            .order('nama_barang')
+            .range(offset,offset+pageSize-1);
+          if(version!==qrLoadVersion)return;
+          if(response.error)throw response.error;
+          if(typeof response.count==='number')total=response.count;
+          const rows=response.data||[];
+          if(!rows.length)break;
+          for(const row of rows){
+            const code=String(row.kode_barang??'').trim();
+            const name=String(row.nama_barang??'').trim();
+            if(code&&(!catalog.has(code)||!catalog.get(code).name))catalog.set(code,{code,name});
+          }
+          offset+=rows.length;
+        }
+        qrItems=[...catalog.values()];
+        $('qr-search').disabled=!qrItems.length;
+        renderQrOptions();
+      }catch{
+        if(version!==qrLoadVersion)return;
+        select.innerHTML='<option value="">Gagal memuat daftar barang</option>';
+        status.textContent='Daftar barang gagal dimuat. Tekan Muat ulang item gudang untuk mencoba lagi.';
+      }finally{
+        if(version===qrLoadVersion)$('qr-load').disabled=false;
+      }
+    }
     function makeQr(){const combined=$('qr-warehouse').value,code=$('qr-item').value.trim(),location=$('qr-location').value.trim(),rack=$('qr-rack').value.trim();if(!combined||!code||!location||!rack){toast('Lengkapi gudang, item code, lokasi, dan rak.');return}const p=combined.split('||'),payload={v:1,item_code:code,warehouse:p[1],location:location,rack:rack},item=qrItems.find(function(i){return i.code===code});$('qr-output').innerHTML='<div class="qr-output"><canvas id="qr-canvas"></canvas><div><p class="eyebrow">LABEL INVENTORY</p><h2>'+esc(code)+'</h2><p>'+esc(item?item.name:'Item')+'</p><p class="muted">Gudang: '+esc(p[1])+'<br>Lokasi: '+esc(location)+'<br>Rak: '+esc(rack)+'</p><div class="button-row"><button id="download-qr" class="secondary">Unduh PNG</button><button class="secondary" onclick="window.print()">Cetak</button></div></div></div>';QRCode.toCanvas($('qr-canvas'),JSON.stringify(payload),{width:280,color:{dark:'#213569',light:'#FFFFFF'}},function(e){if(e)toast(e.message)});$('download-qr').onclick=function(){const a=document.createElement('a');a.href=$('qr-canvas').toDataURL('image/png');a.download='QR_'+[code,p[1],location,rack].join('_').replace(/[^a-zA-Z0-9_-]/g,'_')+'.png';a.click()}}
     function exportExcel(){if(!activeSession||!canRevealStock()){toast('Hasil dapat diekspor setelah Hit 2 diakhiri.');return}const h1=totalsForRound(1),h2=totalsForRound(2),finals=new Map(validations.map(function(v){return [v.code,v.final_qty]})),data=[['Periode','Perusahaan','Gudang','Kode Barang','Nama Barang','Satuan','Stok Sistem','Hit 1','Hit 2','Final','Selisih']];items.forEach(function(i){const k=itemKey(i),one=h1.get(k),two=h2.get(k),final=finals.has(i.code)?Number(finals.get(i.code)):(two!=null?two:one);data.push([activeSession.campaign,i.company,i.warehouseCode,i.code,i.name,i.unit,i.stock,one,two,final,final==null||i.stock==null?null:final-i.stock])});const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);XLSX.utils.book_append_sheet(wb,ws,'Validasi SO');XLSX.writeFile(wb,'Hasil_SO_'+activeSession.campaign.replace(/[^a-zA-Z0-9_-]/g,'_')+'.xlsx');toast('File Excel dibuat.')}
     function setView(next){if(!['opname','hasil','cycle','qr','panduan'].includes(next))next='opname';view=next;document.querySelectorAll('.view').forEach(function(el){el.hidden=el.id!=='view-'+next});document.querySelectorAll('[data-view]').forEach(function(el){el.classList.toggle('active',el.dataset.view===next);el.setAttribute('aria-current',el.dataset.view===next?'page':'false')});const t={opname:['Stok opname','Kelola Hit 1, Hit 2, dan validasi dalam urutan yang terkunci.'],hasil:['Hasil & histori','Tinjau hasil setelah sesi hitung berakhir.'],cycle:['Cycle count harian','Buat sampel hitung harian secara blind.'],qr:['QR item & lokasi','Buat label yang siap dipindai saat opname.'],panduan:['Panduan penggunaan','Ikuti alur wajib tanpa melewati penutupan sesi.']};$('page-title').textContent=t[next][0];$('page-description').textContent=t[next][1];$('crumb').textContent=t[next][0];if(location.hash!=='#'+next)history.replaceState(null,'','#'+next);if(next==='hasil')renderResults()}
-    $('login-form').addEventListener('submit',login);$('logout-button').addEventListener('click',async function(){await sb.auth.signOut()});document.querySelectorAll('[data-view]').forEach(function(b){b.addEventListener('click',function(){setView(b.dataset.view)})});window.addEventListener('hashchange',function(){setView(location.hash.slice(1))});['session-company','cycle-company','qr-company'].forEach(function(id){$(id).addEventListener('change',function(){warehouseOptions(id,id.replace('company','warehouse'))})});$('open-session').addEventListener('click',openSelectedSession);$('search-button').addEventListener('click',function(){page=1;renderCounting()});$('search').addEventListener('input',function(){page=1;renderCounting()});['vendor','brand','count-status'].forEach(function(id){$(id).addEventListener('change',function(){page=1;renderCounting()})});$('reset-filter').addEventListener('click',function(){$('search').value='';$('vendor').value='';$('brand').value='';$('count-status').value='';page=1;renderCounting()});$('item-list').addEventListener('click',function(e){const b=e.target.closest('[data-count]');if(b)showCount(b.dataset.count)});$('pagination').addEventListener('click',function(e){const b=e.target.closest('[data-page]');if(b){page+=Number(b.dataset.page);renderCounting()}});$('count-form').addEventListener('submit',submitCount);$('qty-minus').addEventListener('click',function(){$('qty').value=String(Math.max(0,Number($('qty').value||0)-1))});$('qty-plus').addEventListener('click',function(){$('qty').value=String(Number($('qty').value||0)+1)});$('scan-button').addEventListener('click',startScanner);$('manual-submit').addEventListener('click',function(){handleScan($('manual-code').value)});$('manual-code').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();handleScan($('manual-code').value)}});document.addEventListener('click',function(e){const c=e.target.closest('[data-close]');if(c){if(c.dataset.close==='scan-dialog')stopScanner();$(c.dataset.close).close()}const b=e.target.closest('[data-cycle-key]');if(b&&!b.disabled)showCount(b.dataset.cycleKey)});$('save-validation').addEventListener('click',saveValidation);$('export-button').addEventListener('click',exportExcel);$('cycle-generate').addEventListener('click',generateCycle);$('qr-load').addEventListener('click',loadQrItems);$('qr-make').addEventListener('click',makeQr);$('campaign').value='SO '+today();initAuth();
+    $('qr-company').addEventListener('change',changeQrCompany);
+    $('qr-warehouse').addEventListener('change',loadQrItems);
+    $('qr-load').addEventListener('click',loadQrItems);
+    $('qr-search').addEventListener('input',renderQrOptions);
+    $('qr-item').addEventListener('change',function(){
+      $('qr-make').disabled=!this.value;
+      $('qr-output').replaceChildren();
+    });
+    $('qr-make').addEventListener('click',makeQr);
+
+    $('login-form').addEventListener('submit',login);$('logout-button').addEventListener('click',async function(){await sb.auth.signOut()});document.querySelectorAll('[data-view]').forEach(function(b){b.addEventListener('click',function(){setView(b.dataset.view)})});window.addEventListener('hashchange',function(){setView(location.hash.slice(1))});['session-company','cycle-company'].forEach(function(id){$(id).addEventListener('change',function(){warehouseOptions(id,id.replace('company','warehouse'))})});$('open-session').addEventListener('click',openSelectedSession);$('search-button').addEventListener('click',function(){page=1;renderCounting()});$('search').addEventListener('input',function(){page=1;renderCounting()});['vendor','brand','count-status'].forEach(function(id){$(id).addEventListener('change',function(){page=1;renderCounting()})});$('reset-filter').addEventListener('click',function(){$('search').value='';$('vendor').value='';$('brand').value='';$('count-status').value='';page=1;renderCounting()});$('item-list').addEventListener('click',function(e){const b=e.target.closest('[data-count]');if(b)showCount(b.dataset.count)});$('pagination').addEventListener('click',function(e){const b=e.target.closest('[data-page]');if(b){page+=Number(b.dataset.page);renderCounting()}});$('count-form').addEventListener('submit',submitCount);$('qty-minus').addEventListener('click',function(){$('qty').value=String(Math.max(0,Number($('qty').value||0)-1))});$('qty-plus').addEventListener('click',function(){$('qty').value=String(Number($('qty').value||0)+1)});$('scan-button').addEventListener('click',startScanner);$('manual-submit').addEventListener('click',function(){handleScan($('manual-code').value)});$('manual-code').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();handleScan($('manual-code').value)}});document.addEventListener('click',function(e){const c=e.target.closest('[data-close]');if(c){if(c.dataset.close==='scan-dialog')stopScanner();$(c.dataset.close).close()}const b=e.target.closest('[data-cycle-key]');if(b&&!b.disabled)showCount(b.dataset.cycleKey)});$('save-validation').addEventListener('click',saveValidation);$('export-button').addEventListener('click',exportExcel);$('cycle-generate').addEventListener('click',generateCycle);$('campaign').value='SO '+today();initAuth();
   </script>
 </body>
 </html>
