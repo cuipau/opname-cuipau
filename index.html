@@ -70,6 +70,11 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     .qr-label .button-row{justify-content:center;margin-top:12px}
     .qr-batch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,205px),1fr));gap:12px;margin-top:16px}
     .activity-line{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}
+    .access-page{min-height:100dvh;display:grid;place-items:center;padding:24px;background:var(--bg)}
+    .access-card{width:min(100%,520px);padding:28px}
+    .access-card img{width:50px;max-width:100%;height:auto;margin-bottom:12px}
+    .access-card form,.admin-form{display:grid;gap:12px}
+    .admin-table td{overflow-wrap:anywhere}
     .classification-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
     .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
     .calendar-weekday{text-align:center;color:var(--grey);font-size:13px;padding:4px 0}
@@ -124,6 +129,23 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       <div class="visual-steps"><div class="visual-step"><strong>Hit 1</strong><span class="muted">Scan dan catat tanpa stok sistem.</span></div><div class="visual-step"><strong>Hit 2</strong><span class="muted">Mulai setelah Hit 1 diakhiri.</span></div><div class="visual-step"><strong>Validasi</strong><span class="muted">Terbuka setelah Hit 2 diakhiri.</span></div></div>
     </div></div>
   </section>
+  <section id="access-screen" class="access-page" hidden>
+    <div class="panel access-card">
+      <img src="assets/cui-logo.png" alt="CUI">
+      <h1>Akses cabang</h1>
+      <p id="access-email" class="muted"></p>
+      <p id="access-message" class="notice" role="status">Memeriksa akses aplikasi…</p>
+      <form id="request-access-form" hidden>
+        <label>Cabang tempat bekerja<select id="request-branch" required><option value="">Pilih cabang…</option></select></label>
+        <button type="submit" class="primary">Ajukan akses cabang</button>
+      </form>
+      <div id="access-error" class="form-error" hidden></div>
+      <div class="button-row" style="margin-top:12px">
+        <button id="refresh-access" type="button" class="secondary">Periksa status</button>
+        <button id="access-logout" type="button" class="secondary">Keluar</button>
+      </div>
+    </div>
+  </section>
   <div id="app-shell" hidden>
     <aside class="sidebar">
       <a class="brand" href="#opname"><img src="assets/cui-logo.png" alt="Logo CUI"><span><strong>CUI Inventory</strong><small>Supply Chain Control</small></span></a>
@@ -134,11 +156,12 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         <button class="nav" data-view="cycle"><span>↻</span>Cycle count</button>
         <button class="nav" data-view="qr"><span>▤</span>QR item & lokasi</button>
         <button class="nav" data-view="panduan"><span>?</span>Panduan</button>
+        <button class="nav" data-view="admin" hidden><span>⚙</span>Admin</button>
       </nav>
-      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V6.0</div>
+      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V7.0</div>
     </aside>
     <div class="workspace">
-      <header class="topbar"><span class="breadcrumb">Operasional / Supply Chain / <strong id="crumb">Stok opname</strong></span><div class="account"><span id="account-email" class="account-email"></span><button id="logout-button" class="secondary">Keluar</button></div></header>
+      <header class="topbar"><span class="breadcrumb">Operasional / Supply Chain / <strong id="crumb">Stok opname</strong></span><div class="account"><span id="account-email" class="account-email"></span><span id="account-role" class="tag blue"></span><button id="logout-button" class="secondary">Keluar</button></div></header>
       <main>
         <section class="page-head"><div><p class="eyebrow">INVENTORY WORKSPACE</p><h1 id="page-title">Stok opname</h1><p id="page-description">Kelola Hit 1, Hit 2, dan validasi dalam urutan yang terkunci.</p></div><span id="save-state" class="tag blue">Siap</span></section>
         <div id="fatal" class="notice error" hidden></div>
@@ -157,6 +180,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
               <label>Subbrand<select id="session-subbrand" disabled><option value="">Semua subbrand</option></select></label>
             </div>
             <p id="session-filter-status" class="muted activity-line" role="status"></p>
+            <label id="session-mode-label" hidden>Jenis sesi<select id="session-mode"><option value="production">Operasional</option><option value="test">Uji</option></select></label>
             <div id="session-open" class="session-open"><label>Sesi yang sudah tersimpan<select id="session-select"><option value="">Pilih sesi…</option></select></label><button id="open-session" class="secondary">Buka sesi</button></div>
             <div id="session-banner" class="session-banner" hidden></div><div id="session-actions" class="session-actions"></div>
           </section>
@@ -174,6 +198,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
               <label>Subbrand<select id="cycle-subbrand" disabled><option value="">Semua subbrand</option></select></label>
             </div>
             <p id="cycle-filter-status" class="muted activity-line" role="status"></p>
+            <label id="cycle-mode-label" hidden>Jenis sesi dan rekap<select id="cycle-mode"><option value="production">Operasional</option><option value="test">Uji</option></select></label>
             <div id="cycle-banner" class="activity-line" aria-live="polite"></div>
             <details class="notice"><summary>Cara aplikasi membandingkan stok</summary>
               <p>Mulai sesi untuk menyimpan daftar target dan stok sistem pada jam tersebut. Lanjutkan sesi untuk memakai daftar, hitungan, dan stok acuan yang sama. Saat sesi diakhiri, total fisik per item dibandingkan dengan stok acuan. Jika ada transaksi setelah jam acuan, rekonsiliasi sebelum menilai selisih.</p>
@@ -196,7 +221,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
             <div id="cycle-calendar" class="calendar-grid"></div>
             <p id="cycle-calendar-day" class="activity-line muted" role="status"></p>
           </section>
-          <section class="panel">
+          <section id="cycle-export-panel" class="panel">
             <div class="panel-head"><div><h2>Rekap cycle count harian</h2><p>Pilih tanggal pencatatan (WIB) pada gudang di atas.</p></div></div>
             <div class="button-row"><label>Tanggal rekap<input id="cycle-export-date" type="date"></label><button id="cycle-export" class="secondary">Ekspor Excel cycle count</button></div>
           </section>
@@ -222,6 +247,17 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
           <div id="qr-import-status" class="activity-line" aria-live="polite"></div>
           <div id="qr-import-errors"></div><div id="qr-batch" class="qr-batch-grid"></div><div id="qr-batch-pages" class="pagination"></div>
         </section></section>
+        <section id="view-admin" class="view" hidden>
+          <section class="panel">
+            <div class="panel-head"><div><h2>Akses pengguna</h2><p>Setujui cabang dan pilih peran untuk permintaan yang masuk.</p></div><button id="admin-users-refresh" type="button" class="secondary">Muat ulang pengguna</button></div>
+            <div id="admin-users"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><h2>Sesi uji</h2><p>Gunakan nama, gudang, cabang, atau ID untuk memastikan sesi yang dipilih. Untuk sesi baru, pilih jenis Uji saat membuat sesi.</p></div></div>
+            <form id="admin-session-search" class="queue-grid"><label>Cari sesi<input id="admin-session-query" type="search"></label><button class="primary" type="submit">Cari sesi</button></form>
+            <div id="admin-sessions" style="margin-top:14px"></div>
+          </section>
+        </section>
         <section id="view-panduan" class="view" hidden><section class="panel">
           <div class="panel-head"><div><h2>Alur kerja wajib</h2><p>Tahap tidak dapat dilewati.</p></div></div>
           <div class="guide-grid"><article class="guide-card"><h3>Stok opname</h3><p>Hitung semua item di Hit 1. Akhiri Hit 1 untuk melihat OK atau SELISIH. Hit 2 berisi item selisih, dan validasi berisi item yang masih selisih setelah Hit 2 ditutup.</p></article><article class="guide-card"><h3>Hitung per rak</h3><p>Scan QR atau pilih barang. Isi 0 jika barang kosong. Entri baru pada rak yang sama menjadi koreksi. Hitungan dari rak berbeda dijumlahkan saat ronde ditutup.</p></article><article class="guide-card"><h3>Cycle count</h3><p>Pilih gudang dan target. Jika masih ada daftar terbuka, lanjutkan daftar tersebut. Untuk ekspor harian, pilih tanggal petugas mencatat hitungan.</p></article><article class="guide-card"><h3>Label QR</h3><p>Buat satu label atau impor Excel, lalu cetak label QR dengan kode dan deskripsi barang.</p></article></div>
@@ -249,12 +285,20 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     <div id="validate-error" class="form-error" hidden></div>
     <button class="primary full" type="submit" style="margin-top:16px">Simpan validasi item</button>
   </form></dialog>
+  <dialog id="admin-session-dialog"><form id="admin-session-form" class="admin-form">
+    <div class="dialog-head"><h2 id="admin-session-title"></h2><button class="dialog-close" type="button" data-close="admin-session-dialog" aria-label="Tutup">×</button></div>
+    <p id="admin-session-detail" class="muted"></p>
+    <label>Alasan<input id="admin-session-reason" maxlength="300" required></label>
+    <label id="admin-session-label">Ketik kata konfirmasi<input id="admin-session-confirm" autocomplete="off" required></label>
+    <div id="admin-session-error" class="form-error" hidden></div>
+    <button id="admin-session-submit" class="danger" type="submit">Konfirmasi</button>
+  </form></dialog>
   <div id="qr-print-sheet" hidden></div>
   <div id="toast" role="status" aria-live="polite"></div>
   <script>
     const SUPABASE_URL='https://wwvtnnhridolhgfhnfaj.supabase.co';
     const SUPABASE_KEY='sb_publishable_xJ9mRlIlk7s-DW-CskVwjA_mE0vI1YK';
-    const TABLE_MASTER='stok_temp_baru',TABLE_COUNTS='opname_logs',TABLE_SESSIONS='opname_sessions';
+    const TABLE_COUNTS='opname_logs',TABLE_SESSIONS='opname_sessions';
     const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
     const $=id=>document.getElementById(id);
     const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -271,6 +315,13 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     const work={opname:null,cycle:null};
     const queue={opname:{page:1,query:'',filter:''},cycle:{page:1,query:'',filter:''}};
     const resultPage={number:1,query:''};
+    const roleLabels={admin:'Admin',counter:'Penghitung',validator:'Validator'};
+    const branchKey=value=>String(value??'').trim().replace(/\s+/g,' ').toLowerCase();
+    const warehouseValue=(company,code,branch)=>[company,code,branchKey(branch)].join('||');
+    let access=null,adminSessions=[],adminSessionAction=null,accessVersion=0;
+    const isAdmin=()=>access?.status==='active'&&access.role==='admin';
+    const canCount=()=>access?.status==='active'&&['admin','counter'].includes(access.role);
+    const canValidate=()=>access?.status==='active'&&['admin','validator'].includes(access.role);
     let currentUser=null,metaCombos=[],sessions=[],qrItems=[],qrBatch=[],qrBatchPage=1;
     let qrLoadVersion=0,qrImportVersion=0,cycleLookupVersion=0,legacyReport=null,countDraft=null,validationDraft=null,scanTarget=null,scanner=null,scanGeneration=0;
     let working=false,toastTimer=0;
@@ -290,7 +341,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     function hideFatal(){$('fatal').hidden=true;$('fatal').textContent=''}
     async function rpc(name,params={}){
       const {data,error}=await sb.rpc(name,params);
-      if(error)throw Error(['PGRST202','PGRST204','42703'].includes(error.code)?'Jalankan SUPABASE-UPGRADE-V6.sql, lalu muat ulang aplikasi.':error.message);
+      if(error)throw Error(['PGRST202','PGRST204','42703'].includes(error.code)?'Jalankan SUPABASE-UPGRADE-V7.sql, lalu muat ulang aplikasi.':error.message);
       return data;
     }
     function showFormError(id,message){$(id).textContent=message;$(id).hidden=!message}
@@ -327,7 +378,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     function warehouseOptions(companyId,warehouseId){
       const company=$(companyId).value;
       fillSelect(warehouseId,metaCombos.filter(row=>row.company===company).map(row=>({
-        value:row.company+'||'+row.warehouseCode,label:row.warehouse+' ('+row.warehouseCode+')',
+        value:warehouseValue(row.company,row.warehouseCode,row.branch),
+        label:row.warehouse+' ('+row.warehouseCode+')'+(isAdmin()&&row.branchLabel?' · '+row.branchLabel:''),
       })),'Pilih gudang…');
       $(warehouseId).disabled=!company;
     }
@@ -340,12 +392,12 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     }
     function selectedScope(prefix){
       const company=$(prefix+'-company').value;
-      const [warehouseCompany,warehouseCode]=($(prefix+'-warehouse').value||'').split('||');
-      return company&&company===warehouseCompany&&warehouseCode?{company,warehouseCode}:null;
+      const [warehouseCompany,warehouseCode,branch='']=($(prefix+'-warehouse').value||'').split('||');
+      return company&&company===warehouseCompany&&warehouseCode?{company,warehouseCode,branch}:null;
     }
     function scopeTotal(prefix){
       const scope=selectedScope(prefix);
-      return metaCombos.find(row=>row.company===scope?.company&&row.warehouseCode===scope?.warehouseCode)?.total_items??null;
+      return metaCombos.find(row=>row.company===scope?.company&&row.warehouseCode===scope?.warehouseCode&&branchKey(row.branch)===scope?.branch)?.total_items??null;
     }
     function currentClassification(prefix){
       return Object.fromEntries(classFields.map(field=>[field,$(prefix+'-'+field).value||null]));
@@ -360,7 +412,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const scope=selectedScope(prefix);
       if(!scope)return null;
       const values=currentClassification(prefix);
-      return {p_company:scope.company,p_warehouse:scope.warehouseCode,
+      return {p_company:scope.company,p_warehouse:scope.warehouseCode,p_branch:scope.branch,
+        p_test:isAdmin()&&$(prefix+'-mode').value==='test',
         p_manufacture:values.manufacture,p_brand:values.brand,p_subbrand:values.subbrand};
     }
     function renderClassification(prefix,values={},restore=false){
@@ -397,7 +450,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       renderClassification(prefix);
       status.textContent='Memuat klasifikasi barang…';
       try{
-        const rows=await rpc('cui_inventory_scope_options',{p_company:scope.company,p_warehouse:scope.warehouseCode});
+        const rows=await rpc('cui_inventory_scope_options',{p_company:scope.company,p_warehouse:scope.warehouseCode,p_branch:scope.branch});
         if(version!==state.version)return false;
         Object.assign(state,{rows,ready:true});
         renderClassification(prefix,values||{},Boolean(values));
@@ -412,12 +465,12 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     }
     async function listSessions(){
       const response=await sb.from(TABLE_SESSIONS)
-        .select('id,campaign,company,warehouse,warehouse_code,workflow_version,work_type,status,created_at,filter_manufacture,filter_brand,filter_subbrand')
+        .select('id,campaign,company,warehouse,warehouse_code,branch,workflow_version,work_type,status,created_at,filter_manufacture,filter_brand,filter_subbrand,is_test')
         .eq('work_type','opname').order('created_at',{ascending:false}).limit(250);
-      if(response.error)throw Error(response.error.code==='42703'?'Jalankan SUPABASE-UPGRADE-V6.sql, lalu muat ulang aplikasi.':response.error.message);
+      if(response.error)throw Error(response.error.code==='42703'?'Jalankan SUPABASE-UPGRADE-V7.sql, lalu muat ulang aplikasi.':response.error.message);
       sessions=response.data||[];
       fillSelect('session-select',sessions.map(session=>({
-        value:session.id,label:session.campaign+' · '+session.warehouse_code+
+        value:session.id,label:(session.is_test?'[UJI] ':'')+session.campaign+' · '+session.warehouse_code+(isAdmin()&&session.branch?' · '+session.branch:'')+
           (session.workflow_version===5?' · '+scopeCaption(storedClassification(session))+' · '+stageLabels[session.status]:' · Arsip lama'),
       })),'Pilih sesi…');
     }
@@ -434,41 +487,105 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         showFormError('login-error','Gagal masuk. Periksa email dan kata sandi.');
       }finally{button.disabled=false}
     }
+    function renderAccessPage(){
+      $('access-email').textContent=currentUser?.email||'';
+      const branch=access?.branches?.find(row=>row.key===access.requested_branch)?.label;
+      $('request-access-form').hidden=!access||access.status==='blocked';
+      if(access?.status==='blocked'){
+        $('access-message').textContent='Akses akun diblokir. Hubungi Admin Aplikasi.';
+      }else if(access?.status==='pending'){
+        $('access-message').textContent='Permintaan cabang '+(branch||'')+' menunggu persetujuan Admin.';
+      }else{
+        $('access-message').textContent=access?'Pilih cabang tempat Anda bekerja dan ajukan persetujuan.':'Memeriksa akses aplikasi…';
+      }
+      if(access){
+        fillSelect('request-branch',access.branches.map(row=>({value:row.key,label:row.label})),'Pilih cabang…');
+        $('request-branch').value=access.requested_branch||'';
+      }
+    }
+    function renderRoleAccess(){
+      const branch=access.branches.find(row=>row.key===access.branch)?.label;
+      $('account-role').textContent=roleLabels[access.role]+(branch?' · '+branch:' · Semua cabang');
+      document.querySelector('[data-view="admin"]').hidden=!isAdmin();
+      document.querySelector('[data-view="hasil"]').hidden=!canValidate();
+      $('cycle-export-panel').hidden=!canValidate();
+      $('session-mode-label').hidden=!isAdmin();
+      $('cycle-mode-label').hidden=!isAdmin();
+    }
+    async function refreshAccess(){
+      const user=currentUser;
+      if(!user)return;
+      const version=++accessVersion;
+      showFormError('access-error','');
+      try{
+        const response=await rpc('cui_access_status');
+        if(version!==accessVersion||currentUser?.id!==user.id)return;
+        access=response;
+        if(access.status!=='active'){
+          $('access-screen').hidden=false;
+          $('app-shell').hidden=true;
+          renderAccessPage();
+          return;
+        }
+        $('access-screen').hidden=true;
+        $('app-shell').hidden=false;
+        $('account-email').textContent=user.email||'Pengguna terdaftar';
+        renderRoleAccess();
+        setState('Memuat master gudang…');
+        const rows=await rpc('cui_inventory_warehouses');
+        if(version!==accessVersion||currentUser?.id!==user.id)return;
+        metaCombos=rows;
+        fillScopes();
+        await listSessions();
+        if(version!==accessVersion)return;
+        setState('Supabase aktif');
+        renderWork('opname');
+        renderWork('cycle');
+        setView(location.hash.slice(1)||'opname');
+      }catch(error){
+        if(version!==accessVersion)return;
+        if($('app-shell').hidden)showFormError('access-error',error.message);
+        else{showFatal(error.message);setState('Perlu pemeriksaan')}
+      }
+    }
     async function applyAuth(session){
       const user=session?.user;
       if(user&&currentUser?.id===user.id)return;
       currentUser=user||null;
-      $('app-shell').hidden=!user;
+      access=null;
+      accessVersion++;
+      $('app-shell').hidden=true;
       $('login-screen').hidden=Boolean(user);
-      if(!user){
-        cycleLookupVersion++;
-        cycleCalendar.version++;
-        cycleCandidate=null;
-        cycleChecked=false;
-        work.opname=work.cycle=null;
-        legacyReport=null;
-        metaCombos=[];
-        fillScopes();
-        loadClassification('session');
-        loadClassification('cycle');
-        renderCalendar();
-        changeQrCompany();
-        resetQrBatch();
-        for(const id of ['count-dialog','scan-dialog','validate-dialog'])if($(id).open)$(id).close();
-        return;
-      }
-      $('account-email').textContent=user.email||'Pengguna terdaftar';
-      setState('Memuat master gudang…');
-      setView(location.hash.slice(1)||'opname');
-      try{
-        const rows=await rpc('cui_inventory_warehouses');
-        if(currentUser?.id!==user.id)return;
-        metaCombos=rows;
-        fillScopes();
-        await listSessions();
-        setState('Supabase aktif');
-      }catch(error){showFatal(error.message);setState('Perlu pemeriksaan')}
-      renderWork('opname');renderWork('cycle');
+      $('access-screen').hidden=!user;
+      cycleLookupVersion++;
+      cycleCalendar.version++;
+      cycleCalendar.days=null;
+      cycleCandidate=null;
+      cycleChecked=false;
+      work.opname=work.cycle=null;
+      legacyReport=null;
+      countDraft=validationDraft=adminSessionAction=null;
+      sessions=[];
+      metaCombos=[];
+      fillScopes();
+      fillSelect('session-select',[],'Pilih sesi…');
+      loadClassification('session');
+      loadClassification('cycle');
+      renderCalendar();
+      changeQrCompany();
+      resetQrBatch();
+      adminSessions=[];
+      $('admin-users').replaceChildren();
+      $('admin-sessions').replaceChildren();
+      $('session-mode').value=$('cycle-mode').value='production';
+      $('session-banner').replaceChildren();
+      renderWork('opname');
+      renderWork('cycle');
+      renderResults();
+      for(const id of ['count-dialog','scan-dialog','validate-dialog','admin-session-dialog'])if($(id).open)$(id).close();
+      if(!user)return;
+      renderAccessPage();
+      await refreshAccess();
     }
     async function initAuth(){
       if(!sb)return;
@@ -483,7 +600,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const prefix=type==='opname'?'session':'cycle';
       $(prefix+'-company').value=session.company;
       warehouseOptions(prefix+'-company',prefix+'-warehouse');
-      $(prefix+'-warehouse').value=session.company+'||'+session.warehouse_code;
+      $(prefix+'-warehouse').value=warehouseValue(session.company,session.warehouse_code,session.branch);
+      $(prefix+'-mode').value=session.is_test?'test':'production';
       await loadClassification(prefix,storedClassification(session));
       if(work[type]!==data)return;
       if(type==='opname')$('session-select').value=session.id;
@@ -497,6 +615,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       await setWork(type,await rpc('cui_inventory_state',{p_id:id}),reset);
     }
     async function startWork(type){
+      if(!canCount())throw Error('Hanya Penghitung atau Admin yang dapat memulai sesi.');
       const prefix=type==='opname'?'session':'cycle';
       const scope=scopedParams(prefix);
       if(!scope)throw Error('Pilih perusahaan dan gudang.');
@@ -619,7 +738,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const weekdays=['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
       grid.innerHTML=weekdays.map(day=>'<span class="calendar-weekday">'+day+'</span>').join('')+
         '<span aria-hidden="true"></span>'.repeat(start)+cells.join('');
-      status.textContent=scopeCaption(currentClassification('cycle'))+' · '+num(withCount)+' hari ada hitungan · '+num(withoutCount)+' hari belum ada hitungan.';
+      status.textContent=(isAdmin()&&$('cycle-mode').value==='test'?'Sesi uji · ':'')+scopeCaption(currentClassification('cycle'))+
+        ' · '+num(withCount)+' hari ada hitungan · '+num(withoutCount)+' hari belum ada hitungan.';
       detail.textContent=selected?dateWib(selected)+' · '+dayDetails(selected,days.get(selected),dateToday):'';
     }
     function pickCalendarDay(date){
@@ -684,10 +804,10 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         statCard('Perlu validasi',session&&(session.hit2_ended_at||session.status==='completed')?validate.length:null,'Selisih Hit 2 yang belum divalidasi');
     }
     function renderCycleActions(session){
-      $('cycle-generate').disabled=!cycleChecked||Boolean(cycleCandidate)||isCounting(session);
+      $('cycle-generate').disabled=!canCount()||!cycleChecked||Boolean(cycleCandidate)||isCounting(session);
       $('cycle-continue').disabled=!cycleCandidate||Boolean(session&&cycleCandidate.id===session.id);
       $('cycle-continue').textContent=cycleCandidate?.status==='completed'?'Lihat hasil hari ini':'Lanjutkan sesi';
-      $('cycle-end').disabled=!isCounting(session);
+      $('cycle-end').disabled=!canCount()||!isCounting(session);
     }
     function renderWork(type){
       const data=work[type],session=data?.session;
@@ -700,7 +820,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         if(session){
           const caption=esc(session.warehouse)+' · '+esc(scopeCaption(storedClassification(session)));
           const label=session.status==='completed'?'Selesai':previous?'Lanjutan hari sebelumnya':'Sedang dihitung';
-          $('cycle-banner').innerHTML='<span class="tag '+(session.status==='completed'?'good':previous?'warn':'blue')+'">'+label+'</span> '+caption+
+          $('cycle-banner').innerHTML='<span class="tag '+(session.status==='completed'?'good':previous?'warn':'blue')+'">'+label+'</span> '+(session.is_test?'<span class="tag warn">Uji</span> ':'')+caption+
             ' · Stok acuan '+esc(timeWib(session.hit1_started_at));
         }else if(cycleCandidate){
           const label=cycleCandidate.status==='completed'?'Sesi hari ini sudah selesai':
@@ -720,19 +840,24 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         }).join('');
         $('session-stage').textContent=session?stageLabels[session.status]:'Belum ada sesi';
         $('session-banner').hidden=!session;
-        if(session)$('session-banner').innerHTML='<div><strong>'+esc(session.campaign)+'</strong><br><span class="muted">'+esc(session.company)+' · '+esc(session.warehouse)+
+        if(session)$('session-banner').innerHTML='<div><strong>'+esc(session.campaign)+'</strong> '+(session.is_test?'<span class="tag warn">Uji</span>':'')+'<br><span class="muted">'+esc(session.company)+' · '+esc(session.warehouse)+
           ' · '+esc(scopeCaption(storedClassification(session)))+(session.companion?' · Pendamping '+esc(session.companion):'')+'</span></div>';
         const action={
           hit1_active:'Akhiri sesi Hit 1',hit1_closed:'Mulai Hit 2',hit2_active:'Akhiri sesi Hit 2',validation:'Akhiri stok opname',
         }[session?.status];
-        $('session-actions').innerHTML='<button type="button" class="secondary" data-start-opname>Mulai / lanjutkan sesi</button>'+
+        const allowed=session?.status==='validation'?canValidate():canCount();
+        $('session-actions').innerHTML=(canCount()?'<button type="button" class="secondary" data-start-opname>Mulai / lanjutkan sesi</button>':'')+
           (session?'<button type="button" class="secondary" data-refresh-work="opname">Muat ulang sesi</button>':'')+
-          (action?'<button type="button" class="primary" data-advance-work="opname">'+action+'</button>':'');
+          (action&&allowed?'<button type="button" class="primary" data-advance-work="opname">'+action+'</button>':'');
       }
       const host=$(type==='opname'?'opname-queue':'cycle-list');
       if(!session){host.replaceChildren();return}
       const counting=isCounting(session);
       const validation=session.status==='validation';
+      if(validation&&!canValidate()){
+        host.innerHTML='<div class="notice">Hit 2 telah ditutup. Validator akan memeriksa item yang masih selisih.</div>';
+        return;
+      }
       const title=type==='cycle'?'Daftar cycle count':validation?'Item perlu validasi':session.status==='hit2_active'?'Daftar Hit 2':session.status==='hit1_active'?'Daftar Hit 1':'Hasil per item';
       const intro=counting?'Masukkan hasil per rak. OK atau SELISIH muncul setelah sesi hitung ditutup.':
         validation?'Hanya item yang masih selisih setelah Hit 2. Simpan keputusan final per item.':
@@ -748,7 +873,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         num(compared.filter(item=>(item.result2??item.result1)==='diff').length)+' SELISIH'+
         (compared.some(item=>item.result1==='unknown')?' · '+num(compared.filter(item=>item.result1==='unknown').length)+' tanpa stok pembanding':'')+'</div>':'';
       host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>'+esc(title)+'</h2><p>'+esc(intro)+'</p></div>'+
-        (counting?'<button class="primary" type="button" data-scan-work="'+type+'">Scan QR</button>':'')+
+        (counting&&canCount()?'<button class="primary" type="button" data-scan-work="'+type+'">Scan QR</button>':'')+
         '</div>'+summary+'<div class="queue-grid"><label>Cari kode atau nama barang<input type="search" id="'+type+'-query" data-queue-query="'+type+'" value="'+esc(queue[type].query)+'"></label>'+
         '<label>Status<select id="'+type+'-filter" data-queue-filter="'+type+'">'+options.map(([key,label])=>'<option value="'+key+'">'+label+'</option>').join('')+'</select></label></div>'+
         '<p class="activity-line muted" id="'+type+'-row-count" role="status"></p><div id="'+type+'-rows"></div><div class="pagination" id="'+type+'-pages"></div></section>';
@@ -760,6 +885,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       if(!session||!$(type+'-rows'))return;
       const state=queue[type];
       const counting=isCounting(session),validation=session.status==='validation';
+      const showFinal=session.status==='completed'&&canValidate();
       const eligible=validation?data.items.filter(item=>item.result2==='diff'):roundItems(data);
       const search=state.query.trim().toLowerCase();
       const filtered=eligible.filter(item=>{
@@ -781,7 +907,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         if(counting){
           const done=hasCount(item,session);
           return '<tr>'+label+'<td><span class="tag '+(done?'good':'neutral')+'">'+(done?'Tercatat':'Belum dihitung')+'</span></td>'+
-            '<td><button type="button" class="count-btn" data-count-work="'+type+'" data-item="'+esc(item.code)+'">'+(done?'Hitung / koreksi':'Hitung')+'</button></td></tr>';
+            (canCount()?'<td><button type="button" class="count-btn" data-count-work="'+type+'" data-item="'+esc(item.code)+'">'+(done?'Hitung / koreksi':'Hitung')+'</button></td>':'')+'</tr>';
         }
         if(validation){
           return '<tr>'+label+'<td class="num">'+num(item.system_qty)+'</td><td class="num">'+num(item.hit1)+'</td><td class="num">'+num(item.hit2)+'</td>'+
@@ -792,10 +918,10 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
           '<td>'+resultTag(item.result1)+'</td><td>'+resultTag(item.result2,item.result1==='diff'?'Menunggu Hit 2':'—')+'</td>';
         const finalQty=item.final_qty??item.hit2??item.hit1;
         const finalStatus=item.system_qty==null?'unknown':finalQty===item.system_qty?'ok':'diff';
-        return '<tr>'+label+statuses+(session.status==='completed'?'<td class="num">'+num(finalQty)+(type==='opname'?'<br>'+resultTag(finalStatus):'')+'</td>':'')+'</tr>';
+        return '<tr>'+label+statuses+(showFinal?'<td class="num">'+num(finalQty)+(type==='opname'?'<br>'+resultTag(finalStatus):'')+'</td>':'')+'</tr>';
       }).join('');
-      const headers=counting?'<th>Status</th><th>Tindakan</th>':validation?'<th class="num">Stok sistem</th><th class="num">Hit 1</th><th class="num">Hit 2</th><th>Hasil</th><th>Tindakan</th>':
-        heading+(session.status==='completed'?'<th class="num">Jumlah final</th>':'');
+      const headers=counting?'<th>Status</th>'+(canCount()?'<th>Tindakan</th>':''):validation?'<th class="num">Stok sistem</th><th class="num">Hit 1</th><th class="num">Hit 2</th><th>Hasil</th><th>Tindakan</th>':
+        heading+(showFinal?'<th class="num">Jumlah final</th>':'');
       $(type+'-rows').innerHTML=body?'<div class="table-wrap"><table class="data-table queue-table"><thead><tr><th>Barang</th><th>Satuan</th>'+headers+'</tr></thead><tbody>'+body+'</tbody></table></div>':'<div class="empty">Tidak ada item yang cocok.</div>';
       $(type+'-pages').innerHTML=last>1?'<button data-queue-page="'+type+'" data-step="-1" '+(state.page===1?'disabled':'')+'>Sebelumnya</button><span>'+state.page+' / '+last+'</span><button data-queue-page="'+type+'" data-step="1" '+(state.page===last?'disabled':'')+'>Berikutnya</button>':'';
     }
@@ -803,6 +929,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const data=work[type];
       if(!data)return;
       const session=data.session;
+      if(session.status==='validation'?!canValidate():!canCount())throw Error('Peran Anda tidak dapat mengubah tahap ini.');
       if(isCounting(session)){
         const remaining=roundItems(data).filter(item=>!hasCount(item,session)).length;
         if(remaining){
@@ -822,6 +949,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       toast(next==='completed'?'Sesi telah ditutup.':next==='hit1_closed'?'Hit 1 selesai. Daftar Hit 2 siap.':next==='validation'?'Hit 2 selesai. Daftar validasi siap.':'Hit 2 dimulai.');
     }
     function showCount(type,code,prefill=''){
+      if(!canCount())return;
       const data=work[type];
       const item=data&&roundItems(data).find(row=>row.code===code);
       if(!item||!isCounting(data?.session)){toast('Item tidak ada dalam daftar tahap aktif.');return}
@@ -862,6 +990,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       toast('Hitungan '+draft.code+' tercatat.');
     }
     function openValidation(code){
+      if(!canValidate())return;
       const item=work.opname?.items.find(row=>row.code===code&&row.result2==='diff');
       if(!item||work.opname.session.status!=='validation')return;
       validationDraft=code;
@@ -894,7 +1023,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       }
     }
     async function startScanner(type){
-      if(!isCounting(work[type]?.session))return;
+      if(!canCount()||!isCounting(work[type]?.session))return;
       scanTarget=type;
       const generation=++scanGeneration;
       showFormError('scan-error','');
@@ -926,8 +1055,9 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       try{payload=JSON.parse(code)}catch{}
       if(payload&&typeof payload==='object')code=String(payload.item_code??payload.code??code).trim();
       const warehouse=payload?.warehouse??payload?.warehouse_code;
-      if((warehouse&&warehouse!==data.session.warehouse_code)||(payload?.company&&payload.company!==data.session.company)){
-        showFormError('scan-error','QR ini berasal dari perusahaan atau gudang yang berbeda.');
+      if((warehouse&&warehouse!==data.session.warehouse_code)||(payload?.company&&payload.company!==data.session.company)||
+         (payload?.branch&&branchKey(payload.branch)!==branchKey(data.session.branch))){
+        showFormError('scan-error','QR ini berasal dari cabang, perusahaan, atau gudang yang berbeda.');
         return;
       }
       if(!roundItems(data).some(item=>item.code===code)){
@@ -967,35 +1097,15 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         :qrItems.length?num(qrItems.length)+' barang tersedia di gudang ini.':'Gudang ini belum memiliki daftar barang.';
     }
 
-    async function fetchQrCatalog(company,warehouseCode,isCurrent){
-      const catalog=new Map();
-      let total=Infinity;
-      let offset=0;
-      while(offset<total){
-        const response=await sb.from(TABLE_MASTER)
-          .select('kode_barang,nama_barang',offset===0?{count:'exact'}:{})
-          .eq('perusahaan',company).eq('kode_gudang',warehouseCode)
-          .order('kode_barang').order('nama_barang').range(offset,offset+999);
-        if(!isCurrent())return null;
-        if(response.error)throw Error(response.error.message);
-        if(typeof response.count==='number')total=response.count;
-        const rows=response.data||[];
-        if(!rows.length)break;
-        for(const row of rows){
-          const code=String(row.kode_barang??'').trim();
-          const name=String(row.nama_barang??'').trim();
-          if(code&&(!catalog.has(code)||!catalog.get(code).name))catalog.set(code,{code,name});
-        }
-        offset+=rows.length;
-      }
-      return [...catalog.values()];
+    async function fetchQrCatalog(scope,isCurrent){
+      const rows=await rpc('cui_qr_catalog',{p_company:scope.company,p_warehouse:scope.warehouseCode,p_branch:scope.branch||''});
+      return isCurrent()?rows:null;
     }
 
     async function loadQrItems(){
       const version=++qrLoadVersion;
-      const company=$('qr-company').value;
-      const [warehouseCompany,warehouseCode]=$('qr-warehouse').value.split('||');
-      const hasWarehouse=Boolean(currentUser&&company&&company===warehouseCompany&&warehouseCode);
+      const scope=selectedScope('qr');
+      const hasWarehouse=Boolean(access?.status==='active'&&scope);
       const select=$('qr-item');
       const status=$('qr-item-status');
 
@@ -1013,7 +1123,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       if(!hasWarehouse)return;
 
       try{
-        const rows=await fetchQrCatalog(company,warehouseCode,()=>version===qrLoadVersion);
+        const rows=await fetchQrCatalog(scope,()=>version===qrLoadVersion);
         if(!rows||version!==qrLoadVersion)return;
         qrItems=rows;
         $('qr-search').disabled=!qrItems.length;
@@ -1081,7 +1191,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         :'Gambar QR gagal dibuat. Muat ulang halaman dan coba lagi.';
     }
     function qrPayload(label){
-      return {v:1,item_code:label.code,warehouse:label.warehouseCode,location:label.location,rack:label.rack,company:label.company};
+      return {v:1,item_code:label.code,warehouse:label.warehouseCode,location:label.location,rack:label.rack,company:label.company,
+        ...(label.branch?{branch:label.branch}:{})};
     }
     function makeLabelCard(label,download){
       const canvas=drawInventoryQr(qrPayload(label));
@@ -1139,10 +1250,11 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     }
     function downloadQrTemplate(){
       downloadWorkbook('Template_Label_QR_CUI.xlsx',{
-        'Label QR':[['Perusahaan','Kode Gudang','Item Code','Deskripsi Barang','Lokasi','Rak']],
+        'Label QR':[['Perusahaan','Kode Gudang','Cabang','Item Code','Deskripsi Barang','Lokasi','Rak']],
         'Petunjuk':[['Cara memakai template'],
           ['Isi satu baris untuk setiap label.'],
           ['Perusahaan dan Kode Gudang boleh kosong bila perusahaan dan gudang sudah dipilih di menu QR.'],
+          ['Isi Cabang jika kode gudang yang sama ada di beberapa cabang dan tidak dipilih pada menu QR.'],
           ['Deskripsi Barang boleh kosong. Aplikasi akan mengambilnya dari master barang.'],
           ['Simpan Item Code, Kode Gudang, dan Rak sebagai teks agar angka nol di depan tetap terbaca.']],
       });
@@ -1150,6 +1262,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     const qrExcelHeaders={
       company:['perusahaan','company'],
       warehouseCode:['kodegudang','warehousecode','gudang','warehouse'],
+      branch:['cabang','branch'],
       code:['itemcode','kodebarang','itemno','kodeitem','sku'],
       name:['deskripsibarang','deskripsi','namabarang','itemdescription','description','itemname'],
       location:['lokasi','location','area'],
@@ -1189,18 +1302,21 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const sheet=book.Sheets[book.SheetNames[0]];
       if(!sheet)throw Error('File Excel belum memiliki lembar data.');
       const rows=parseQrRows(excel.utils.sheet_to_json(sheet,{header:1,raw:false,defval:'',blankrows:true}),selected);
-      const scopes=new Map(metaCombos.map(row=>[(row.company+'|'+row.warehouseCode).toLowerCase(),row]));
       const catalogs=new Map(),seen=new Set(),labels=[],errors=[];
       for(const row of rows){
         if(version!==qrImportVersion)return;
-        const scope=scopes.get((row.company+'|'+row.warehouseCode).toLowerCase());
+        const matches=metaCombos.filter(scope=>scope.company.toLowerCase()===row.company.toLowerCase()&&
+          scope.warehouseCode.toLowerCase()===row.warehouseCode.toLowerCase()&&
+          (!row.branch||branchKey(scope.branch)===branchKey(row.branch)));
+        const scope=matches.length===1?matches[0]:!row.branch&&selected?
+          matches.find(item=>branchKey(item.branch)===selected.branch):null;
         if(!row.code||!row.location||!row.rack||!scope){
-          errors.push('Baris '+row.line+' · Lengkapi item, lokasi, rak, dan gudang yang terdaftar.');
+          errors.push('Baris '+row.line+' · Lengkapi item, lokasi, rak, dan gudang pada cabang yang dapat diakses.');
           continue;
         }
-        const key=scope.company+'||'+scope.warehouseCode;
+        const key=warehouseValue(scope.company,scope.warehouseCode,scope.branch);
         if(!catalogs.has(key)){
-          const available=await fetchQrCatalog(scope.company,scope.warehouseCode,()=>version===qrImportVersion);
+          const available=await fetchQrCatalog(scope,()=>version===qrImportVersion);
           if(!available)return;
           catalogs.set(key,new Map(available.map(item=>[item.code.toLowerCase(),item])));
         }
@@ -1240,7 +1356,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         data.session.status==='completed'?'Sesi selesai':
         data.session.status==='validation'?'Hit 2 selesai · tampilkan item yang masih selisih':
         'Sesi masih berjalan. Lihat status per item di menu Stok opname.';
-      output.innerHTML='<div class="notice"><strong>'+esc(session.campaign)+'</strong> · '+esc(session.warehouse)+'<br>'+esc(description)+'</div>'+
+      output.innerHTML='<div class="notice"><strong>'+esc(session.campaign)+'</strong> '+(session.is_test?'<span class="tag warn">Uji</span>':'')+' · '+esc(session.warehouse)+'<br>'+esc(description)+'</div>'+
         (showRows?'<label>Cari hasil barang<input type="search" id="result-query" value="'+esc(resultPage.query)+'"></label><p id="result-count" class="activity-line muted" role="status"></p><div id="result-rows"></div><div id="result-pages" class="pagination"></div>':'');
       renderResultRows();
     }
@@ -1265,10 +1381,11 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       $('result-pages').innerHTML=max>1?'<button data-result-step="-1" '+(resultPage.number===1?'disabled':'')+'>Sebelumnya</button><span>'+resultPage.number+' / '+max+'</span><button data-result-step="1" '+(resultPage.number===max?'disabled':'')+'>Berikutnya</button>':'';
     }
     function exportOpname(){
+      if(!canValidate())throw Error('Ekspor hanya untuk Validator atau Admin.');
       if(legacyReport){
         const rows=[['Periode','Perusahaan','Gudang','Item Code','Deskripsi','Satuan','Hit','Qty','Lokasi','Petugas','Status','Waktu']];
         for(const item of legacyReport.rows)rows.push([legacyReport.session.campaign,legacyReport.session.company,legacyReport.session.warehouse_code,item.code,item.name,item.unit,item.count_round,item.qty,item.location,item.operator,item.status,item.created_at]);
-        downloadWorkbook('CUI_Arsip_Stok_Opname.xlsx',{'Arsip hitungan':rows});
+        downloadWorkbook((legacyReport.session.is_test?'CUI_UJI_':'CUI_')+'Arsip_Stok_Opname.xlsx',{'Arsip hitungan':rows});
         return;
       }
       const data=work.opname;
@@ -1281,9 +1398,10 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
           item.system_qty==null||finalQty==null?null:Number((finalQty-item.system_qty).toFixed(10)),item.validation_note,
           data.session.filter_manufacture,data.session.filter_brand,data.session.filter_subbrand]);
       }
-      downloadWorkbook('CUI_Stok_Opname_'+data.session.warehouse_code+'_'+data.session.planned_date+'.xlsx',{'Rekap opname':rows});
+      downloadWorkbook((data.session.is_test?'CUI_UJI_':'CUI_')+'Stok_Opname_'+data.session.warehouse_code+'_'+data.session.planned_date+'.xlsx',{'Rekap opname':rows});
     }
     async function exportCycle(){
+      if(!canValidate())throw Error('Ekspor hanya untuk Validator atau Admin.');
       const scope=scopedParams('cycle');
       const date=$('cycle-export-date').value;
       if(!scope||!date)throw Error('Pilih perusahaan, gudang, dan tanggal rekap.');
@@ -1302,7 +1420,112 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       }
       const recap=[['Tanggal rekap (WIB)','Tanggal rencana','Perusahaan','Kode Gudang','Item Code','Deskripsi','Satuan','Total Qty hari ini','Hasil sesi','Manufacture','Brand','Subbrand','Stok acuan (WIB)']];
       for(const row of totals.values())recap.push([date,row.plan_date,scope.p_company,scope.p_warehouse,row.code,row.name,row.unit,Number(row.qty.toFixed(10)),row.result,row.manufacture,row.brand,row.subbrand,row.reference_wib?.replace('T',' ')]);
-      downloadWorkbook('CUI_Cycle_Count_'+scope.p_warehouse+'_'+date+'.xlsx',{'Rekap harian':recap,'Detail per rak':details});
+      downloadWorkbook((scope.p_test?'CUI_UJI_':'CUI_')+'Cycle_Count_'+scope.p_warehouse+'_'+date+'.xlsx',{'Rekap harian':recap,'Detail per rak':details});
+    }
+    async function requestBranch(){
+      if(!$('request-branch').value)throw Error('Pilih cabang tempat Anda bekerja.');
+      await rpc('cui_request_branch',{p_branch:$('request-branch').value});
+      await refreshAccess();
+    }
+    async function signOut(){
+      const {error}=await sb.auth.signOut();
+      if(error)throw Error(error.message);
+    }
+    async function loadAdminUsers(){
+      if(!isAdmin())return;
+      const users=await rpc('cui_admin_users');
+      if(!isAdmin())return;
+      const branchChoices=access.branches;
+      const labels={pending:'Menunggu',active:'Aktif',blocked:'Diblokir'};
+      $('admin-users').innerHTML=users.length?'<div class="table-wrap"><table class="data-table queue-table admin-table">'+
+        '<thead><tr><th>Email / status</th><th>Peran</th><th>Cabang</th><th>Tindakan</th></tr></thead><tbody>'+
+        users.map(user=>{
+          const email='<td><strong>'+esc(user.email)+'</strong><br>'+esc(labels[user.status]||user.status)+'</td>';
+          if(user.role==='admin')return '<tr>'+email+'<td>Admin</td><td>Semua cabang</td><td>Akun Admin</td></tr>';
+          const selectedRole=user.role||'counter';
+          const selectedBranch=user.branch||user.requested_branch||'';
+          const roles=['counter','validator'].map(role=>'<option value="'+role+'" '+(role===selectedRole?'selected':'')+'>'+roleLabels[role]+'</option>').join('');
+          const options=branchChoices.map(row=>'<option value="'+esc(row.key)+'" '+(row.key===selectedBranch?'selected':'')+'>'+esc(row.label)+'</option>').join('');
+          const requested=branchChoices.find(row=>row.key===user.requested_branch)?.label;
+          return '<tr>'+email+
+            '<td><select data-access-role aria-label="Peran '+esc(user.email)+'">'+roles+'</select></td>'+
+            '<td><select data-access-branch aria-label="Cabang '+esc(user.email)+'"><option value="">Pilih cabang…</option>'+options+'</select>'+
+            (requested?'<small>Permintaan '+esc(requested)+'</small>':'')+'</td>'+
+            '<td><div class="button-row"><button type="button" class="primary" data-user-access="active" data-user-id="'+esc(user.id)+'">'+
+            (user.status==='pending'?'Setujui':user.status==='blocked'?'Aktifkan':'Simpan')+'</button>'+
+            (user.status!=='blocked'?'<button type="button" class="secondary" data-user-access="blocked" data-user-id="'+esc(user.id)+'">Blokir</button>':'')+
+            '</div></td></tr>';
+        }).join('')+'</tbody></table></div>':'<div class="empty">Belum ada permintaan cabang.</div>';
+    }
+    async function updateAdminUser(button){
+      const row=button.closest('tr');
+      const status=button.dataset.userAccess;
+      if(status==='blocked'&&!confirm('Blokir akses aplikasi untuk akun ini?'))return;
+      const branch=row.querySelector('[data-access-branch]').value;
+      if(status==='active'&&!branch)throw Error('Pilih cabang terlebih dahulu.');
+      await rpc('cui_admin_user_access',{
+        p_user:button.dataset.userId,p_role:row.querySelector('[data-access-role]').value,
+        p_branch:branch||null,p_status:status,
+      });
+      await loadAdminUsers();
+      toast('Akses pengguna tersimpan.');
+    }
+    async function loadAdminSessions(){
+      if(!isAdmin())return;
+      const rows=await rpc('cui_admin_sessions',{p_query:$('admin-session-query').value.trim()});
+      if(!isAdmin())return;
+      adminSessions=rows;
+      $('admin-sessions').innerHTML=rows.length?'<div class="table-wrap"><table class="data-table queue-table admin-table">'+
+        '<thead><tr><th>Sesi</th><th>Gudang / cabang</th><th>Dibuat</th><th>Catatan hitung</th><th>Tindakan</th></tr></thead><tbody>'+
+        rows.map(s=>{
+          const label=s.work_type==='cycle'?'Cycle count':s.workflow_version===1?'Arsip lama':stageLabels[s.status]||s.status;
+          const action=s.is_test?'<button type="button" class="danger" data-admin-session="delete" data-session-id="'+esc(s.id)+'">Hapus sesi uji</button>':
+            s.branch_locked?'<span class="muted">Operasional</span>':
+            '<button type="button" class="secondary" data-admin-session="mark" data-session-id="'+esc(s.id)+'">Tandai sebagai uji</button>';
+          return '<tr><td><strong>'+esc(s.campaign)+'</strong> '+(s.is_test?'<span class="tag warn">Uji</span>':'')+
+            '<br><small>'+esc(label)+' · '+esc(s.id)+'</small></td><td>'+esc(s.warehouse)+' ('+esc(s.warehouse_code)+')<br>'+esc(s.branch||'Cabang belum ditetapkan')+'</td>'+
+            '<td>'+esc(timeWib(s.created_at))+'</td><td>'+num(s.count_rows)+'</td><td>'+action+'</td></tr>';
+        }).join('')+'</tbody></table></div>':'<div class="empty">Tidak ada sesi yang cocok.</div>';
+    }
+    async function refreshAdmin(){
+      await Promise.all([loadAdminUsers(),loadAdminSessions()]);
+    }
+    function openAdminSession(action,id){
+      if(!isAdmin())return;
+      const session=adminSessions.find(row=>row.id===id);
+      if(!session)return;
+      adminSessionAction={action,id};
+      const deleting=action==='delete';
+      $('admin-session-title').textContent=deleting?'Hapus sesi uji':'Tandai sesi sebagai uji';
+      $('admin-session-detail').textContent=session.campaign+' · '+session.warehouse_code+' · '+(session.branch||'Cabang belum ditetapkan')+
+        ' · '+timeWib(session.created_at)+' · ID '+id+'. '+(deleting?
+          'Penghapusan permanen mencakup catatan hitung dan validasi sesi ini.':'Tindakan dicatat. Sesi ini akan masuk daftar uji.');
+      $('admin-session-label').firstChild.textContent='Ketik '+(deleting?'HAPUS':'UJI');
+      $('admin-session-submit').textContent=deleting?'Hapus permanen':'Tandai sebagai uji';
+      $('admin-session-reason').value='';
+      $('admin-session-confirm').value='';
+      showFormError('admin-session-error','');
+      $('admin-session-dialog').showModal();
+      $('admin-session-reason').focus();
+    }
+    async function submitAdminSession(){
+      if(!isAdmin()||!adminSessionAction)return;
+      const {action,id}=adminSessionAction;
+      const deleting=action==='delete';
+      await rpc(deleting?'cui_admin_delete_test':'cui_admin_mark_test',{
+        p_id:id,p_reason:$('admin-session-reason').value.trim(),p_confirm:$('admin-session-confirm').value.trim(),
+      });
+      $('admin-session-dialog').close();
+      adminSessionAction=null;
+      if(work.opname?.session.id===id||legacyReport?.session.id===id){
+        work.opname=null;
+        legacyReport=null;
+        renderWork('opname');
+        renderResults();
+      }
+      if(work.cycle?.session.id===id)work.cycle=null;
+      await Promise.all([listSessions(),loadAdminSessions(),refreshCycleContext(Boolean(work.cycle))]);
+      toast(deleting?'Sesi uji dihapus.':'Sesi ditandai sebagai uji.');
     }
     const titles={
       opname:['Stok opname','Hitung stok, cek selisih, dan tindak lanjuti item per tahap.'],
@@ -1310,9 +1533,11 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       cycle:['Cycle count','Lanjutkan hitungan harian yang masih tersisa.'],
       qr:['QR item & lokasi','Buat dan cetak label satu per satu atau dari Excel.'],
       panduan:['Panduan','Petunjuk penghitungan dan pembuatan label.'],
+      admin:['Admin','Kelola akses pengguna dan sesi uji.'],
     };
     function setView(name){
-      const view=Object.hasOwn(titles,name)?name:'opname';
+      const allowed=name==='admin'?isAdmin():name==='hasil'?canValidate():true;
+      const view=allowed&&Object.hasOwn(titles,name)?name:'opname';
       for(const element of document.querySelectorAll('.view'))element.hidden=element.id!=='view-'+view;
       for(const button of document.querySelectorAll('[data-view]')){
         button.classList.toggle('active',button.dataset.view===view);
@@ -1323,13 +1548,26 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       $('page-description').textContent=titles[view][1];
       if(location.hash!=='#'+view)history.replaceState(null,'','#'+view);
       if(view==='hasil')renderResults();
+      if(view==='admin')refreshAdmin().catch(error=>showFatal(error.message));
     }
 
     $('login-form').addEventListener('submit',login);
-    $('logout-button').addEventListener('click',()=>doWork(null,async()=>{
-      const {error}=await sb.auth.signOut();
-      if(error)throw Error(error.message);
-    }));
+    $('logout-button').addEventListener('click',event=>doWork(event.currentTarget,signOut));
+    $('access-logout').addEventListener('click',event=>doWork(event.currentTarget,signOut,'access-error'));
+    $('refresh-access').addEventListener('click',event=>doWork(event.currentTarget,refreshAccess,'access-error'));
+    $('request-access-form').addEventListener('submit',event=>{
+      event.preventDefault();
+      doWork(event.submitter,requestBranch,'access-error');
+    });
+    $('admin-users-refresh').addEventListener('click',event=>doWork(event.currentTarget,loadAdminUsers));
+    $('admin-session-search').addEventListener('submit',event=>{
+      event.preventDefault();
+      doWork(event.submitter,loadAdminSessions);
+    });
+    $('admin-session-form').addEventListener('submit',event=>{
+      event.preventDefault();
+      doWork(event.submitter,submitAdminSession,'admin-session-error');
+    });
     for(const button of document.querySelectorAll('[data-view]'))button.addEventListener('click',()=>setView(button.dataset.view));
     window.addEventListener('hashchange',()=>setView(location.hash.slice(1)));
     window.addEventListener('afterprint',clearPrint);
@@ -1337,6 +1575,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const scope=selectedScope('session'),session=work.opname?.session;
       const filters=currentClassification('session');
       if(session&&(session.company!==scope?.company||session.warehouse_code!==scope?.warehouseCode||
+        branchKey(session.branch)!==scope?.branch||Boolean(session.is_test)!==(isAdmin()&&$('session-mode').value==='test')||
         classFields.some(field=>filters[field]!==storedClassification(session)[field]))){
         work.opname=null;
         renderWork('opname');
@@ -1375,6 +1614,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       }
     }
     $('open-session').addEventListener('click',event=>doWork(event.currentTarget,openSavedOpname));
+    $('session-mode').addEventListener('change',changeOpnameScope);
+    $('cycle-mode').addEventListener('change',()=>refreshCycleContext());
     $('cycle-generate').addEventListener('click',event=>doWork(event.currentTarget,()=>startWork('cycle')));
     $('cycle-continue').addEventListener('click',event=>doWork(event.currentTarget,continueCycle));
     $('cycle-refresh').addEventListener('click',event=>doWork(event.currentTarget,()=>reloadWork('cycle',work.cycle.session.id)));
@@ -1425,6 +1666,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       if(!button)return;
       const action=button.dataset;
       if(action.close)$(action.close).close();
+      if(action.userAccess)doWork(button,()=>updateAdminUser(button));
+      if(action.adminSession)openAdminSession(action.adminSession,action.sessionId);
       if(action.classRetry)changeWarehouseScope(action.classRetry);
       if(Object.hasOwn(action,'retryCycle'))refreshCycleContext(Boolean(work.cycle));
       if(action.calendarDay)pickCalendarDay(action.calendarDay);
