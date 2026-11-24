@@ -70,7 +70,26 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     .qr-label .button-row{justify-content:center;margin-top:12px}
     .qr-batch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,205px),1fr));gap:12px;margin-top:16px}
     .activity-line{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}
+    .classification-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
+    .calendar-weekday{text-align:center;color:var(--grey);font-size:13px;padding:4px 0}
+    .calendar-day{min-width:0;min-height:72px;padding:8px;text-align:left;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--navy)}
+    .calendar-day strong,.calendar-day small{display:block}
+    .calendar-day small{font-size:12px;margin-top:4px;overflow-wrap:anywhere}
+    .calendar-day.has-count{background:var(--green-soft);color:var(--green)}
+    .calendar-day.no-count{background:var(--yellow-soft)}
+    .calendar-day.future{background:var(--bg);color:var(--grey)}
+    .calendar-day[aria-pressed="true"]{outline:2px solid var(--navy);outline-offset:1px}
+    .calendar-dot{display:none}
     @media(max-width:767px){.queue-grid{grid-template-columns:1fr}}
+    @media(max-width:767px){
+      .classification-grid{grid-template-columns:1fr}
+      .calendar-grid{gap:4px}
+      .calendar-day{min-height:48px;padding:4px;text-align:center;font-size:13px}
+      .calendar-day small{display:none}
+      .calendar-dot{display:block;font-size:11px}
+      .calendar-weekday{font-size:11px}
+    }
     @media print{
       @page{size:A4;margin:10mm}
       body.printing-labels{background:white}
@@ -116,7 +135,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         <button class="nav" data-view="qr"><span>▤</span>QR item & lokasi</button>
         <button class="nav" data-view="panduan"><span>?</span>Panduan</button>
       </nav>
-      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V5.0</div>
+      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V6.0</div>
     </aside>
     <div class="workspace">
       <header class="topbar"><span class="breadcrumb">Operasional / Supply Chain / <strong id="crumb">Stok opname</strong></span><div class="account"><span id="account-email" class="account-email"></span><button id="logout-button" class="secondary">Keluar</button></div></header>
@@ -132,6 +151,12 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
               <label>Perusahaan<select id="session-company"></select></label><label>Gudang<select id="session-warehouse"></select></label>
               <label>Pendamping<input id="companion" placeholder="Nama pendamping"></label>
             </div>
+            <div class="classification-grid">
+              <label>Manufacture<select id="session-manufacture" disabled><option value="">Semua manufacture</option></select></label>
+              <label>Brand<select id="session-brand" disabled><option value="">Semua brand</option></select></label>
+              <label>Subbrand<select id="session-subbrand" disabled><option value="">Semua subbrand</option></select></label>
+            </div>
+            <p id="session-filter-status" class="muted activity-line" role="status"></p>
             <div id="session-open" class="session-open"><label>Sesi yang sudah tersimpan<select id="session-select"><option value="">Pilih sesi…</option></select></label><button id="open-session" class="secondary">Buka sesi</button></div>
             <div id="session-banner" class="session-banner" hidden></div><div id="session-actions" class="session-actions"></div>
           </section>
@@ -141,13 +166,36 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         <section id="view-hasil" class="view" hidden><section class="panel"><div class="panel-head"><div><h2>Hasil stok opname</h2><p>Buka sesi dari menu Stok opname untuk melihat hasil atau mengunduh rekap.</p></div><button id="export-button" class="primary" disabled>Ekspor Excel opname</button></div><div id="results-content"></div></section></section>
         <section id="view-cycle" class="view" hidden>
           <section class="panel">
-            <div class="panel-head"><div><h2>Sesi cycle count</h2><p>Mulai daftar hari ini atau lanjutkan daftar yang masih terbuka di gudang yang sama.</p></div><span id="cycle-date" class="tag neutral"></span></div>
-            <div class="cycle-grid"><label>Perusahaan<select id="cycle-company"></select></label><label>Gudang<select id="cycle-warehouse"></select></label><label>Target item<input id="cycle-target" type="number" min="1" value="20"></label><button id="cycle-generate" class="primary">Mulai / lanjutkan</button></div>
+            <div class="panel-head"><div><h2>Sesi cycle count</h2><p>Pilih gudang, klasifikasi barang, dan target hitung untuk satu sesi.</p></div><span id="cycle-date" class="tag neutral"></span></div>
+            <div class="classification-grid"><label>Perusahaan<select id="cycle-company"></select></label><label>Gudang<select id="cycle-warehouse"></select></label><label>Target item<input id="cycle-target" type="number" min="1" value="20"></label></div>
+            <div class="classification-grid">
+              <label>Manufacture<select id="cycle-manufacture" disabled><option value="">Semua manufacture</option></select></label>
+              <label>Brand<select id="cycle-brand" disabled><option value="">Semua brand</option></select></label>
+              <label>Subbrand<select id="cycle-subbrand" disabled><option value="">Semua subbrand</option></select></label>
+            </div>
+            <p id="cycle-filter-status" class="muted activity-line" role="status"></p>
             <div id="cycle-banner" class="activity-line" aria-live="polite"></div>
-            <div class="button-row"><button id="cycle-refresh" class="secondary" hidden>Muat ulang sesi</button><button id="cycle-end" class="primary" hidden>Akhiri cycle count</button></div>
+            <details class="notice"><summary>Cara aplikasi membandingkan stok</summary>
+              <p>Mulai sesi untuk menyimpan daftar target dan stok sistem pada jam tersebut. Lanjutkan sesi untuk memakai daftar, hitungan, dan stok acuan yang sama. Saat sesi diakhiri, total fisik per item dibandingkan dengan stok acuan. Jika ada transaksi setelah jam acuan, rekonsiliasi sebelum menilai selisih.</p>
+            </details>
+            <div class="button-row">
+              <button id="cycle-generate" class="primary" disabled>Mulai sesi</button>
+              <button id="cycle-continue" class="primary" disabled>Lanjutkan sesi</button>
+              <button id="cycle-refresh" class="secondary" hidden>Muat ulang sesi</button>
+              <button id="cycle-end" class="secondary" disabled>Akhiri sesi</button>
+            </div>
           </section>
           <div id="cycle-stats" class="stats" aria-label="Dashboard cycle count"></div>
           <div id="cycle-list"></div>
+          <section class="panel">
+            <div class="panel-head">
+              <div><h2>Kalender cycle count</h2><p>Hari dihitung dari waktu pencatatan fisik dalam WIB. Pilih tanggal untuk rekap.</p></div>
+              <div class="button-row"><label>Bulan<input id="cycle-month" type="month"></label><button id="cycle-calendar-refresh" type="button" class="secondary">Segarkan kalender</button></div>
+            </div>
+            <p id="cycle-calendar-status" class="muted" role="status"></p>
+            <div id="cycle-calendar" class="calendar-grid"></div>
+            <p id="cycle-calendar-day" class="activity-line muted" role="status"></p>
+          </section>
           <section class="panel">
             <div class="panel-head"><div><h2>Rekap cycle count harian</h2><p>Pilih tanggal pencatatan (WIB) pada gudang di atas.</p></div></div>
             <div class="button-row"><label>Tanggal rekap<input id="cycle-export-date" type="date"></label><button id="cycle-export" class="secondary">Ekspor Excel cycle count</button></div>
@@ -213,6 +261,11 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     const num=value=>value==null?'—':new Intl.NumberFormat('id-ID',{maximumFractionDigits:6}).format(value);
     const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta'}).format(new Date());
     const dateWib=date=>new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeZone:'Asia/Jakarta'}).format(new Date(date+'T00:00:00+07:00'));
+    const timeWib=value=>value?new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Jakarta'}).format(new Date(value))+' WIB':'—';
+    const classFields=['manufacture','brand','subbrand'];
+    const classOptions={session:{version:0},cycle:{version:0}};
+    let cycleCandidate=null,cycleChecked=false;
+    const cycleCalendar={version:0,days:null,selected:''};
     const stageLabels={hit1_active:'Hit 1 berjalan',hit1_closed:'Hit 1 ditutup',hit2_active:'Hit 2 berjalan',validation:'Validasi',completed:'Selesai'};
     const resultLabels={ok:'OK',diff:'SELISIH',unknown:'Stok sistem tidak tersedia'};
     const work={opname:null,cycle:null};
@@ -237,7 +290,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     function hideFatal(){$('fatal').hidden=true;$('fatal').textContent=''}
     async function rpc(name,params={}){
       const {data,error}=await sb.rpc(name,params);
-      if(error)throw Error(error.code==='PGRST202'?'Jalankan SUPABASE-UPGRADE-V5.sql, lalu muat ulang aplikasi.':error.message);
+      if(error)throw Error(['PGRST202','PGRST204','42703'].includes(error.code)?'Jalankan SUPABASE-UPGRADE-V6.sql, lalu muat ulang aplikasi.':error.message);
       return data;
     }
     function showFormError(id,message){$(id).textContent=message;$(id).hidden=!message}
@@ -254,7 +307,10 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         else showFatal(error.message);
       }finally{
         working=false;
-        if(button?.isConnected)button.disabled=false;
+        if(button?.isConnected){
+          button.disabled=false;
+          if(['cycle-generate','cycle-continue','cycle-end'].includes(button.id))renderCycleActions(work.cycle?.session);
+        }
       }
     }
     function formQty(id){
@@ -291,14 +347,78 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const scope=selectedScope(prefix);
       return metaCombos.find(row=>row.company===scope?.company&&row.warehouseCode===scope?.warehouseCode)?.total_items??null;
     }
+    function currentClassification(prefix){
+      return Object.fromEntries(classFields.map(field=>[field,$(prefix+'-'+field).value||null]));
+    }
+    function storedClassification(session){
+      return Object.fromEntries(classFields.map(field=>[field,session['filter_'+field]||null]));
+    }
+    function scopeCaption(filters){
+      return classFields.map(field=>filters[field]).filter(Boolean).join(' / ')||'Semua klasifikasi';
+    }
+    function scopedParams(prefix){
+      const scope=selectedScope(prefix);
+      if(!scope)return null;
+      const values=currentClassification(prefix);
+      return {p_company:scope.company,p_warehouse:scope.warehouseCode,
+        p_manufacture:values.manufacture,p_brand:values.brand,p_subbrand:values.subbrand};
+    }
+    function renderClassification(prefix,values={},restore=false){
+      const state=classOptions[prefix];
+      let rows=state.rows||[];
+      for(const field of classFields){
+        const select=$(prefix+'-'+field);
+        let requested=values[field]||'';
+        const options=[...new Set(rows.map(row=>row[field]).filter(Boolean))].sort((left,right)=>left.localeCompare(right,'id'));
+        if(restore&&requested&&!options.includes(requested))options.push(requested);
+        if(!options.includes(requested))requested='';
+        fillSelect(select.id,options.map(value=>({value,label:value})),'Semua '+field);
+        select.value=requested;
+        select.disabled=!state.ready||!options.length;
+        if(requested)rows=rows.filter(row=>row[field]===requested);
+      }
+    }
+    async function loadClassification(prefix,values){
+      const state=classOptions[prefix],version=++state.version;
+      const scope=selectedScope(prefix);
+      const key=scope?JSON.stringify(scope):'';
+      const status=$(prefix+'-filter-status');
+      if(!scope){
+        Object.assign(state,{key,rows:[],ready:false});
+        renderClassification(prefix);
+        status.textContent='';
+        return true;
+      }
+      if(state.key===key&&state.ready){
+        renderClassification(prefix,values||currentClassification(prefix),Boolean(values));
+        return true;
+      }
+      Object.assign(state,{key,rows:[],ready:false});
+      renderClassification(prefix);
+      status.textContent='Memuat klasifikasi barang…';
+      try{
+        const rows=await rpc('cui_inventory_scope_options',{p_company:scope.company,p_warehouse:scope.warehouseCode});
+        if(version!==state.version)return false;
+        Object.assign(state,{rows,ready:true});
+        renderClassification(prefix,values||{},Boolean(values));
+        status.textContent='Pilih klasifikasi untuk membatasi daftar sesi. Pilihan Semua mencakup seluruh item yang cocok.';
+        return true;
+      }catch(error){
+        if(version===state.version){
+          status.innerHTML='<span>'+esc(error.message)+'</span> <button type="button" class="text-btn" data-class-retry="'+prefix+'">Muat ulang klasifikasi</button>';
+        }
+        return false;
+      }
+    }
     async function listSessions(){
       const response=await sb.from(TABLE_SESSIONS)
-        .select('id,campaign,company,warehouse,warehouse_code,workflow_version,work_type,status,created_at')
+        .select('id,campaign,company,warehouse,warehouse_code,workflow_version,work_type,status,created_at,filter_manufacture,filter_brand,filter_subbrand')
         .eq('work_type','opname').order('created_at',{ascending:false}).limit(250);
-      if(response.error)throw Error(response.error.message);
+      if(response.error)throw Error(response.error.code==='42703'?'Jalankan SUPABASE-UPGRADE-V6.sql, lalu muat ulang aplikasi.':response.error.message);
       sessions=response.data||[];
       fillSelect('session-select',sessions.map(session=>({
-        value:session.id,label:session.campaign+' · '+session.warehouse_code+(session.workflow_version===5?' · '+stageLabels[session.status]:' · Arsip lama'),
+        value:session.id,label:session.campaign+' · '+session.warehouse_code+
+          (session.workflow_version===5?' · '+scopeCaption(storedClassification(session))+' · '+stageLabels[session.status]:' · Arsip lama'),
       })),'Pilih sesi…');
     }
     async function login(event){
@@ -322,10 +442,16 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       $('login-screen').hidden=Boolean(user);
       if(!user){
         cycleLookupVersion++;
+        cycleCalendar.version++;
+        cycleCandidate=null;
+        cycleChecked=false;
         work.opname=work.cycle=null;
         legacyReport=null;
         metaCombos=[];
         fillScopes();
+        loadClassification('session');
+        loadClassification('cycle');
+        renderCalendar();
         changeQrCompany();
         resetQrBatch();
         for(const id of ['count-dialog','scan-dialog','validate-dialog'])if($(id).open)$(id).close();
@@ -349,7 +475,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       sb.auth.onAuthStateChange((event,session)=>setTimeout(()=>applyAuth(session),0));
     }
 
-    function setWork(type,data,reset=false){
+    async function setWork(type,data,reset=false){
       if(type==='opname'&&(reset||work.opname?.session.id!==data.session.id))Object.assign(resultPage,{number:1,query:''});
       const session=data.session;
       work[type]=data;
@@ -358,6 +484,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       $(prefix+'-company').value=session.company;
       warehouseOptions(prefix+'-company',prefix+'-warehouse');
       $(prefix+'-warehouse').value=session.company+'||'+session.warehouse_code;
+      await loadClassification(prefix,storedClassification(session));
+      if(work[type]!==data)return;
       if(type==='opname')$('session-select').value=session.id;
       if(reset||queue[type].stage!==session.status){
         Object.assign(queue[type],{page:1,query:'',filter:'',stage:session.status});
@@ -366,47 +494,139 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       if(type==='opname')renderResults();
     }
     async function reloadWork(type,id,reset=false){
-      setWork(type,await rpc('cui_inventory_state',{p_id:id}),reset);
+      await setWork(type,await rpc('cui_inventory_state',{p_id:id}),reset);
     }
     async function startWork(type){
       const prefix=type==='opname'?'session':'cycle';
-      const scope=selectedScope(prefix);
+      const scope=scopedParams(prefix);
       if(!scope)throw Error('Pilih perusahaan dan gudang.');
+      if(!classOptions[prefix].ready)throw Error('Tunggu sampai pilihan klasifikasi barang siap.');
       const target=Number($('cycle-target').value);
       if(type==='cycle'&&(!Number.isSafeInteger(target)||target<1||target>2147483647))throw Error('Isi target cycle count dengan bilangan bulat minimal 1.');
       if(type==='cycle')cycleLookupVersion++;
-      const sessionId=await rpc('cui_inventory_start',{
-        p_type:type,p_company:scope.company,p_warehouse:scope.warehouseCode,
+      const sessionId=await rpc('cui_inventory_start_scoped',{
+        ...scope,p_type:type,
         p_campaign:type==='opname'?$('campaign').value.trim():null,
         p_companion:type==='opname'?$('companion').value.trim():null,
         p_limit:type==='cycle'?target:null,
       });
       if(type==='opname')await listSessions();
+      if(type==='cycle'&&JSON.stringify(scope)!==JSON.stringify(scopedParams('cycle')))return;
       await reloadWork(type,sessionId,true);
+      if(type==='cycle')await refreshCycleContext(true);
       toast(type==='cycle'?'Daftar cycle count dibuka.':'Sesi stok opname dibuka.');
     }
-    async function openCycleBacklog(){
+    async function refreshCycleContext(keepWork=false){
       const version=++cycleLookupVersion;
-      const scope=selectedScope('cycle');
-      work.cycle=null;
+      const scope=scopedParams('cycle');
+      if(!keepWork)work.cycle=null;
+      cycleCandidate=null;
+      cycleChecked=false;
       renderWork('cycle');
-      if(!scope)return;
+      loadCalendar();
+      if(!scope||!classOptions.cycle.ready)return;
       $('cycle-banner').textContent='Memeriksa daftar yang belum selesai…';
       try{
-        const {data,error}=await sb.from(TABLE_SESSIONS).select('id')
-          .eq('workflow_version',5).eq('work_type','cycle').eq('company',scope.company)
-          .eq('warehouse_code',scope.warehouseCode).neq('status','completed').order('planned_date').order('created_at').limit(1);
+        const candidate=await rpc('cui_cycle_find',scope);
         if(version!==cycleLookupVersion)return;
-        if(error)throw Error(error.message);
-        if(!data?.length){
-          $('cycle-banner').textContent='Tidak ada daftar tertunda. Klik Mulai / lanjutkan untuk membuka daftar hari ini.';
-          return;
-        }
-        const active=await rpc('cui_inventory_state',{p_id:data[0].id});
-        if(version===cycleLookupVersion)setWork('cycle',active,true);
+        cycleCandidate=candidate;
+        cycleChecked=true;
+        renderWork('cycle');
       }catch(error){
-        if(version===cycleLookupVersion)$('cycle-banner').textContent='Gagal memeriksa daftar. Coba Mulai / lanjutkan. '+error.message;
+        if(version===cycleLookupVersion){
+          $('cycle-banner').innerHTML='<span>'+esc(error.message)+'</span> <button type="button" class="text-btn" data-retry-cycle>Coba lagi</button>';
+        }
       }
+    }
+    async function continueCycle(){
+      if(!cycleCandidate)return;
+      const version=cycleLookupVersion;
+      const data=await rpc('cui_inventory_state',{p_id:cycleCandidate.id});
+      if(version===cycleLookupVersion)await setWork('cycle',data,true);
+    }
+    async function loadCalendar(quiet=false){
+      const version=++cycleCalendar.version;
+      const scope=scopedParams('cycle'),month=$('cycle-month').value;
+      const status=$('cycle-calendar-status');
+      const grid=$('cycle-calendar');
+      if(!scope||!classOptions.cycle.ready||!/^\d{4}-\d{2}$/.test(month)){
+        cycleCalendar.days=null;
+        grid.replaceChildren();
+        $('cycle-calendar-day').textContent='';
+        status.textContent='Pilih gudang dan bulan untuk melihat aktivitas.';
+        return;
+      }
+      if(!quiet){
+        cycleCalendar.days=null;
+        grid.replaceChildren();
+        $('cycle-calendar-day').textContent='';
+        status.textContent='Memuat kalender…';
+      }
+      try{
+        const calendar=await rpc('cui_cycle_calendar',{...scope,p_month:month+'-01'});
+        if(version!==cycleCalendar.version)return;
+        if(!cycleCalendar.selected.startsWith(month+'-')){
+          cycleCalendar.selected=calendar.today.startsWith(month+'-')?calendar.today:month+'-01';
+          if(cycleCalendar.selected<=calendar.today)$('cycle-export-date').value=cycleCalendar.selected;
+        }
+        Object.assign(cycleCalendar,{month,today:calendar.today,days:new Map(calendar.days.map(day=>[day.day,day]))});
+        renderCalendar();
+      }catch(error){
+        if(version===cycleCalendar.version){
+          cycleCalendar.days=null;
+          grid.replaceChildren();
+          $('cycle-calendar-day').textContent='';
+          status.textContent='Kalender gagal dimuat. '+error.message;
+        }
+      }
+    }
+    function dayDetails(date,record,referenceDate){
+      if(date>referenceDate)return 'Akan datang';
+      const activity=record?.items?num(record.items)+' item dengan hitungan':'Belum ada hitungan';
+      return activity+(record?.pending?' · '+num(record.pending)+' sesi rencana masih terbuka':'')+
+        (record?.closed?' · '+num(record.closed)+' sesi diakhiri':'');
+    }
+    function renderCalendar(){
+      const grid=$('cycle-calendar');
+      const detail=$('cycle-calendar-day');
+      const status=$('cycle-calendar-status');
+      const {month,today:dateToday,days,selected}=cycleCalendar;
+      if(!currentUser||!days){
+        grid.replaceChildren();
+        detail.textContent='';
+        status.textContent='Pilih gudang dan bulan untuk melihat aktivitas.';
+        return;
+      }
+      const firstDate=new Date(month+'-01T00:00:00Z');
+      const endDate=new Date(firstDate);
+      endDate.setUTCMonth(endDate.getUTCMonth()+1,0);
+      const dayCount=endDate.getUTCDate();
+      const start=(firstDate.getUTCDay()+6)%7;
+      let withCount=0,withoutCount=0;
+      const cells=Array.from({length:dayCount},(_,index)=>{
+        const date=month+'-'+String(index+1).padStart(2,'0');
+        const record=days.get(date);
+        const future=date>dateToday;
+        const kind=future?'future':record?.items?'has-count':'no-count';
+        if(!future){if(record?.items)withCount++;else withoutCount++}
+        const short=future?'Mendatang':record?.items?'Ada hitungan':'Belum dihitung';
+        const icon=future?'–':record?.items?'✓':'○';
+        const label=dateWib(date)+' · '+dayDetails(date,record,dateToday);
+        return '<button type="button" class="calendar-day '+kind+'" data-calendar-day="'+date+'" aria-label="'+esc(label)+'"'+
+          ' title="'+esc(label)+'" aria-pressed="'+(selected===date)+'"'+(date===dateToday?' aria-current="date"':'')+
+          (future?' disabled':'')+'><strong>'+(index+1)+'</strong><small>'+short+'</small><span class="calendar-dot" aria-hidden="true">'+icon+'</span></button>';
+      });
+      const weekdays=['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
+      grid.innerHTML=weekdays.map(day=>'<span class="calendar-weekday">'+day+'</span>').join('')+
+        '<span aria-hidden="true"></span>'.repeat(start)+cells.join('');
+      status.textContent=scopeCaption(currentClassification('cycle'))+' · '+num(withCount)+' hari ada hitungan · '+num(withoutCount)+' hari belum ada hitungan.';
+      detail.textContent=selected?dateWib(selected)+' · '+dayDetails(selected,days.get(selected),dateToday):'';
+    }
+    function pickCalendarDay(date){
+      cycleCalendar.selected=date;
+      $('cycle-export-date').value=date;
+      renderCalendar();
+      $('cycle-calendar').querySelector('[data-calendar-day="'+date+'"]')?.focus();
     }
     async function openSavedOpname(){
       const id=$('session-select').value;
@@ -451,17 +671,23 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const all=session?.total_items??scopeTotal(type==='cycle'?'cycle':'session');
       if(type==='cycle'){
         $('cycle-stats').innerHTML=statCard('Total item gudang',all,'Kode barang unik')+
-          statCard('Target sesi',session?items.length:null,'Daftar tersimpan')+
+          statCard('Target sesi',session?items.length:null,session?.scope_items!=null?num(session.scope_items)+' item sesuai klasifikasi':'Daftar tersimpan')+
           statCard('Sudah dihitung',session?counted:null,'Item dengan hitungan')+
           statCard('Sisa hitungan',session?items.length-counted:null,'Bisa dilanjutkan di hari berikutnya');
         return;
       }
       const recount=items.filter(item=>item.result1==='diff');
       const validate=items.filter(item=>item.result2==='diff'&&!item.validated);
-      $('stats').innerHTML=statCard('Total item gudang',all,'Kode barang unik')+
+      $('stats').innerHTML=statCard('Total item gudang',all,session?num(items.length)+' item dalam sesi':'Kode barang unik')+
         statCard('Sudah dihitung',session?counted:null,'Item dengan Hit 1 tersimpan')+
         statCard('Masuk Hit 2',session?.hit1_ended_at?recount.length:null,recount.filter(item=>item.counted2).length+' selesai Hit 2')+
         statCard('Perlu validasi',session&&(session.hit2_ended_at||session.status==='completed')?validate.length:null,'Selisih Hit 2 yang belum divalidasi');
+    }
+    function renderCycleActions(session){
+      $('cycle-generate').disabled=!cycleChecked||Boolean(cycleCandidate)||isCounting(session);
+      $('cycle-continue').disabled=!cycleCandidate||Boolean(session&&cycleCandidate.id===session.id);
+      $('cycle-continue').textContent=cycleCandidate?.status==='completed'?'Lihat hasil hari ini':'Lanjutkan sesi';
+      $('cycle-end').disabled=!isCounting(session);
     }
     function renderWork(type){
       const data=work[type],session=data?.session;
@@ -469,12 +695,21 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       if(type==='cycle'){
         $('cycle-date').textContent=dateWib(today());
         $('cycle-refresh').hidden=!session;
-        $('cycle-end').hidden=!isCounting(session);
+        renderCycleActions(session);
         const previous=session&&session.planned_date<today();
-        $('cycle-banner').innerHTML=session
-          ?'<span class="tag '+(session.status==='completed'?'good':previous?'warn':'blue')+'">'+(session.status==='completed'?'Selesai':previous?'Lanjutan hari sebelumnya':'Sedang dihitung')+'</span> '+esc(session.warehouse)+' · '+esc(dateWib(session.planned_date))+
-            (previous&&isCounting(session)?' · '+num(data.items.filter(item=>!item.counted1).length)+' item tersisa':'')
-          :'Pilih gudang untuk melihat atau melanjutkan daftar cycle count.';
+        if(session){
+          const caption=esc(session.warehouse)+' · '+esc(scopeCaption(storedClassification(session)));
+          const label=session.status==='completed'?'Selesai':previous?'Lanjutan hari sebelumnya':'Sedang dihitung';
+          $('cycle-banner').innerHTML='<span class="tag '+(session.status==='completed'?'good':previous?'warn':'blue')+'">'+label+'</span> '+caption+
+            ' · Stok acuan '+esc(timeWib(session.hit1_started_at));
+        }else if(cycleCandidate){
+          const label=cycleCandidate.status==='completed'?'Sesi hari ini sudah selesai':
+            cycleCandidate.planned_date<today()?'Ada sisa dari hari sebelumnya':'Ada sesi yang masih terbuka';
+          $('cycle-banner').innerHTML='<span class="tag '+(cycleCandidate.status==='completed'?'good':'warn')+'">'+label+'</span> '+
+            esc(dateWib(cycleCandidate.planned_date))+(cycleCandidate.status==='completed'?'':' · '+num(cycleCandidate.remaining)+' item tersisa');
+        }else{
+          $('cycle-banner').textContent=cycleChecked?'Siap memulai sesi untuk pilihan ini.':'Pilih gudang untuk memeriksa sesi cycle count.';
+        }
       }else{
         const stages=['Hit 1','Hit 1 ditutup','Hit 2','Validasi','Selesai'];
         const step=['hit1_active','hit1_closed','hit2_active','validation','completed'].indexOf(session?.status);
@@ -485,7 +720,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         }).join('');
         $('session-stage').textContent=session?stageLabels[session.status]:'Belum ada sesi';
         $('session-banner').hidden=!session;
-        if(session)$('session-banner').innerHTML='<div><strong>'+esc(session.campaign)+'</strong><br><span class="muted">'+esc(session.company)+' · '+esc(session.warehouse)+(session.companion?' · Pendamping '+esc(session.companion):'')+'</span></div>';
+        if(session)$('session-banner').innerHTML='<div><strong>'+esc(session.campaign)+'</strong><br><span class="muted">'+esc(session.company)+' · '+esc(session.warehouse)+
+          ' · '+esc(scopeCaption(storedClassification(session)))+(session.companion?' · Pendamping '+esc(session.companion):'')+'</span></div>';
         const action={
           hit1_active:'Akhiri sesi Hit 1',hit1_closed:'Mulai Hit 2',hit2_active:'Akhiri sesi Hit 2',validation:'Akhiri stok opname',
         }[session?.status];
@@ -582,6 +818,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const next=await rpc('cui_inventory_advance',{p_id:session.id,p_expected:session.status});
       if(type==='opname')await listSessions();
       await reloadWork(type,session.id);
+      if(type==='cycle')await refreshCycleContext(true);
       toast(next==='completed'?'Sesi telah ditutup.':next==='hit1_closed'?'Hit 1 selesai. Daftar Hit 2 siap.':next==='validation'?'Hit 2 selesai. Daftar validasi siap.':'Hit 2 dimulai.');
     }
     function showCount(type,code,prefill=''){
@@ -621,6 +858,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         renderRows(draft.type);
       }
       $('count-dialog').close();
+      if(draft.type==='cycle')loadCalendar(true);
       toast('Hitungan '+draft.code+' tercatat.');
     }
     function openValidation(code){
@@ -1035,35 +1273,36 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       }
       const data=work.opname;
       if(data?.session.status!=='completed')throw Error('Akhiri stok opname untuk mengunduh rekap final.');
-      const rows=[['Periode','Perusahaan','Kode Gudang','Item Code','Deskripsi','Satuan','Stok Sistem','Hit 1','Hasil Hit 1','Hit 2','Hasil Hit 2','Qty Final','Selisih Final','Catatan Validasi']];
+      const rows=[['Periode','Perusahaan','Kode Gudang','Item Code','Deskripsi','Satuan','Stok Sistem','Hit 1','Hasil Hit 1','Hit 2','Hasil Hit 2','Qty Final','Selisih Final','Catatan Validasi','Filter Manufacture','Filter Brand','Filter Subbrand']];
       for(const item of data.items){
         const finalQty=item.final_qty??item.hit2??item.hit1;
         rows.push([data.session.campaign,data.session.company,data.session.warehouse_code,item.code,item.name,item.unit,item.system_qty,
           item.hit1,resultLabels[item.result1],item.hit2,resultLabels[item.result2],finalQty,
-          item.system_qty==null||finalQty==null?null:Number((finalQty-item.system_qty).toFixed(10)),item.validation_note]);
+          item.system_qty==null||finalQty==null?null:Number((finalQty-item.system_qty).toFixed(10)),item.validation_note,
+          data.session.filter_manufacture,data.session.filter_brand,data.session.filter_subbrand]);
       }
       downloadWorkbook('CUI_Stok_Opname_'+data.session.warehouse_code+'_'+data.session.planned_date+'.xlsx',{'Rekap opname':rows});
     }
     async function exportCycle(){
-      const scope=selectedScope('cycle');
+      const scope=scopedParams('cycle');
       const date=$('cycle-export-date').value;
       if(!scope||!date)throw Error('Pilih perusahaan, gudang, dan tanggal rekap.');
-      const records=await rpc('cui_cycle_daily_export',{p_company:scope.company,p_warehouse:scope.warehouseCode,p_day:date});
+      const records=await rpc('cui_cycle_daily_export_scoped',{...scope,p_day:date});
       if(!records.length)throw Error('Belum ada catatan cycle count pada tanggal dan gudang ini.');
-      const details=[['Tanggal pencatatan (WIB)','Tanggal rencana','Perusahaan','Kode Gudang','Gudang','Item Code','Deskripsi','Satuan','Qty','Lokasi/Rak','Petugas','Catatan','Status catatan','Hasil sesi']];
+      const details=[['Tanggal pencatatan (WIB)','Tanggal rencana','Perusahaan','Kode Gudang','Gudang','Item Code','Deskripsi','Satuan','Qty','Lokasi/Rak','Petugas','Catatan','Status catatan','Hasil sesi','Manufacture','Brand','Subbrand','Stok acuan (WIB)']];
       const totals=new Map();
       for(const row of records){
         const result=resultLabels[row.result]||'Sesi terbuka';
-        details.push([row.time_wib.replace('T',' '),row.plan_date,scope.company,scope.warehouseCode,row.warehouse,row.code,row.name,row.unit,row.qty,row.location,row.operator,row.note,row.in_daily_total?'Terakhir pada tanggal rekap':'Dikoreksi pada tanggal rekap',result]);
+        details.push([row.time_wib.replace('T',' '),row.plan_date,scope.p_company,scope.p_warehouse,row.warehouse,row.code,row.name,row.unit,row.qty,row.location,row.operator,row.note,row.in_daily_total?'Terakhir pada tanggal rekap':'Dikoreksi pada tanggal rekap',result,row.manufacture,row.brand,row.subbrand,row.reference_wib?.replace('T',' ')]);
         if(!row.in_daily_total)continue;
-        const key=JSON.stringify([row.plan_date,row.code,row.unit]);
+        const key=JSON.stringify([row.session_id,row.code,row.unit]);
         const recap=totals.get(key)||{...row,qty:0,result};
         recap.qty+=Number(row.qty);
         totals.set(key,recap);
       }
-      const recap=[['Tanggal rekap (WIB)','Tanggal rencana','Perusahaan','Kode Gudang','Item Code','Deskripsi','Satuan','Total Qty hari ini','Hasil sesi']];
-      for(const row of totals.values())recap.push([date,row.plan_date,scope.company,scope.warehouseCode,row.code,row.name,row.unit,Number(row.qty.toFixed(10)),row.result]);
-      downloadWorkbook('CUI_Cycle_Count_'+scope.warehouseCode+'_'+date+'.xlsx',{'Rekap harian':recap,'Detail per rak':details});
+      const recap=[['Tanggal rekap (WIB)','Tanggal rencana','Perusahaan','Kode Gudang','Item Code','Deskripsi','Satuan','Total Qty hari ini','Hasil sesi','Manufacture','Brand','Subbrand','Stok acuan (WIB)']];
+      for(const row of totals.values())recap.push([date,row.plan_date,scope.p_company,scope.p_warehouse,row.code,row.name,row.unit,Number(row.qty.toFixed(10)),row.result,row.manufacture,row.brand,row.subbrand,row.reference_wib?.replace('T',' ')]);
+      downloadWorkbook('CUI_Cycle_Count_'+scope.p_warehouse+'_'+date+'.xlsx',{'Rekap harian':recap,'Detail per rak':details});
     }
     const titles={
       opname:['Stok opname','Hitung stok, cek selisih, dan tindak lanjuti item per tahap.'],
@@ -1096,28 +1335,53 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     window.addEventListener('afterprint',clearPrint);
     function changeOpnameScope(){
       const scope=selectedScope('session'),session=work.opname?.session;
-      if(session&&(session.company!==scope?.company||session.warehouse_code!==scope?.warehouseCode)){
+      const filters=currentClassification('session');
+      if(session&&(session.company!==scope?.company||session.warehouse_code!==scope?.warehouseCode||
+        classFields.some(field=>filters[field]!==storedClassification(session)[field]))){
         work.opname=null;
         renderWork('opname');
         renderResults();
       }else renderStats('opname',work.opname);
     }
+    async function changeWarehouseScope(prefix){
+      if(prefix==='cycle'){
+        cycleLookupVersion++;
+        cycleCalendar.version++;
+        cycleCandidate=null;
+        cycleChecked=false;
+        cycleCalendar.days=null;
+        work.cycle=null;
+        renderWork('cycle');
+        renderCalendar();
+      }
+      const ready=loadClassification(prefix);
+      if(prefix==='session')changeOpnameScope();
+      if(await ready&&prefix==='cycle')refreshCycleContext();
+    }
     for(const [prefix,type] of [['session','opname'],['cycle','cycle']]){
       $(prefix+'-company').addEventListener('change',()=>{
         warehouseOptions(prefix+'-company',prefix+'-warehouse');
-        if(type==='cycle')openCycleBacklog();
-        else changeOpnameScope();
+        changeWarehouseScope(prefix);
       });
-      $(prefix+'-warehouse').addEventListener('change',()=>{
-        if(type==='cycle')openCycleBacklog();
-        else changeOpnameScope();
-      });
+      $(prefix+'-warehouse').addEventListener('change',()=>changeWarehouseScope(prefix));
+      for(let index=0;index<classFields.length;index++){
+        $(prefix+'-'+classFields[index]).addEventListener('change',()=>{
+          const values=currentClassification(prefix);
+          for(const field of classFields.slice(index+1))values[field]=null;
+          renderClassification(prefix,values);
+          if(type==='cycle')refreshCycleContext();
+          else changeOpnameScope();
+        });
+      }
     }
     $('open-session').addEventListener('click',event=>doWork(event.currentTarget,openSavedOpname));
     $('cycle-generate').addEventListener('click',event=>doWork(event.currentTarget,()=>startWork('cycle')));
+    $('cycle-continue').addEventListener('click',event=>doWork(event.currentTarget,continueCycle));
     $('cycle-refresh').addEventListener('click',event=>doWork(event.currentTarget,()=>reloadWork('cycle',work.cycle.session.id)));
     $('cycle-end').addEventListener('click',event=>doWork(event.currentTarget,()=>advanceWork('cycle')));
     $('cycle-export').addEventListener('click',event=>doWork(event.currentTarget,exportCycle));
+    $('cycle-month').addEventListener('change',()=>loadCalendar());
+    $('cycle-calendar-refresh').addEventListener('click',()=>loadCalendar());
     $('export-button').addEventListener('click',event=>doWork(event.currentTarget,exportOpname));
     $('count-form').addEventListener('submit',event=>{
       event.preventDefault();doWork(event.submitter,submitCount,'count-error');
@@ -1161,6 +1425,9 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       if(!button)return;
       const action=button.dataset;
       if(action.close)$(action.close).close();
+      if(action.classRetry)changeWarehouseScope(action.classRetry);
+      if(Object.hasOwn(action,'retryCycle'))refreshCycleContext(Boolean(work.cycle));
+      if(action.calendarDay)pickCalendarDay(action.calendarDay);
       if(Object.hasOwn(action,'startOpname'))doWork(button,()=>startWork('opname'));
       if(action.refreshWork)doWork(button,()=>reloadWork(action.refreshWork,work[action.refreshWork].session.id));
       if(action.advanceWork)doWork(button,()=>advanceWork(action.advanceWork));
@@ -1173,6 +1440,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     });
     $('campaign').value='SO '+today();
     $('cycle-export-date').value=today();
+    $('cycle-month').value=today().slice(0,7);
+    renderCalendar();
     initAuth();
   </script>
 </body>
