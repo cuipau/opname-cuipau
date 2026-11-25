@@ -177,7 +177,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         <button class="nav" data-view="panduan"><span>?</span>Panduan</button>
         <button class="nav" data-view="admin" hidden><span>⚙</span>Admin</button>
       </nav>
-      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V10.0</div>
+      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V11.0</div>
     </aside>
     <div class="workspace">
       <header class="topbar"><span class="breadcrumb">Operasional / Supply Chain / <strong id="crumb">Stok opname</strong></span><div class="account"><span id="account-email" class="account-email"></span><span id="account-role" class="tag blue"></span><button id="logout-button" class="secondary">Keluar</button></div></header>
@@ -239,6 +239,9 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
               <label>Manufacture<select id="report-manufacture" disabled></select></label><label>Brand<select id="report-brand" disabled></select></label><label>Subbrand<select id="report-subbrand" disabled></select></label></div>
               <p id="report-filter-status" class="muted activity-line" role="status"></p></details>
           </section>
+          <section id="found-export-panel" class="panel" hidden>
+            <div class="panel-head"><div><h2>Ekspor item temuan</h2><p>Menggunakan tanggal temuan, jenis hitung dan jenis sesi pada filter laporan.</p></div><button id="found-export" class="primary" type="button">Ekspor Excel temuan</button></div>
+          </section>
           <section id="opname-report-panel" class="panel"><div class="panel-head"><div><h2>Hasil stok opname</h2><p>Buka sesi dari menu Stok opname untuk melihat hasil atau mengunduh rekap.</p></div><button id="export-button" class="primary" disabled>Ekspor Excel opname</button></div><div id="results-content"></div></section>
         </section>
         <section id="view-cycle" class="view" hidden>
@@ -258,6 +261,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
             </details>
             <div class="button-row">
               <button id="cycle-generate" class="primary" disabled>Mulai sesi</button>
+              <button id="cycle-found-start" class="secondary" type="button" disabled>Mulai sesi khusus temuan</button>
               <button id="cycle-continue" class="primary" disabled>Lanjutkan sesi</button>
               <button id="cycle-refresh" class="secondary" hidden>Muat ulang sesi</button>
               <button id="cycle-end" class="secondary" disabled>Akhiri sesi</button>
@@ -298,6 +302,11 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
           <div id="qr-import-errors"></div><div id="qr-batch" class="qr-batch-grid"></div><div id="qr-batch-pages" class="pagination"></div>
         </section></section>
         <section id="view-admin" class="view" hidden>
+          <section class="panel">
+            <div class="panel-head"><div><h2>Refresh stok SAP</h2><p>Perbarui master stok CUI dan PAU di Supabase, termasuk stok nol.</p></div><button id="sap-refresh" class="primary" type="button" disabled>Refresh data SAP</button></div>
+            <p id="sap-status" role="status" class="activity-line muted"></p>
+            <button id="sap-status-reload" class="secondary" type="button">Periksa status penghubung</button>
+          </section>
           <section class="panel">
             <div class="panel-head"><div><h2>Akses pengguna</h2><p>Setujui cabang dan pilih peran untuk permintaan yang masuk.</p></div><button id="admin-users-refresh" type="button" class="secondary">Muat ulang pengguna</button></div>
             <div id="admin-users"></div>
@@ -353,6 +362,14 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     <div id="admin-session-error" class="form-error" hidden></div>
     <button id="admin-session-submit" class="danger" type="submit">Konfirmasi</button>
   </form></dialog>
+  <dialog id="found-dialog"><form id="found-form">
+    <div class="dialog-head"><h2>Tambahkan item temuan</h2><button class="dialog-close" type="button" data-close="found-dialog" aria-label="Tutup">×</button></div>
+    <label>Perusahaan dan gudang<select id="found-scope" required></select></label>
+    <label>Item Code<input id="found-code" maxlength="120" required></label>
+    <div class="two-col"><label>Deskripsi barang<input id="found-name" maxlength="300"></label><label>Satuan<input id="found-unit" maxlength="40"></label></div>
+    <p class="muted">Isi deskripsi dan satuan jika item belum lengkap di master. Setelah ditambahkan, catat jumlah fisik dan raknya.</p>
+    <div id="found-error" class="form-error" role="alert" hidden></div><button class="primary full" type="submit">Tambahkan dan hitung</button>
+  </form></dialog>
   <div id="qr-print-sheet" hidden></div>
   <div id="toast" role="status" aria-live="polite"></div>
   <script>
@@ -377,6 +394,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     const queue={opname:{page:1,query:'',filter:''},cycle:{page:1,query:'',filter:''}};
     const resultPage={number:1,query:'',company:''};
     let reportVersion=0,historyVersion=0,historyOffset=0;
+    let foundDraft=null,sapTimer=null,sapVersion=0,sapLastSuccess=null;
     let cameraJob=null,scannerLibraryRequest=null;
     let cameraReaderNumber=0;
     const roleLabels={admin:'Admin',counter:'Penghitung',validator:'Validator'};
@@ -412,7 +430,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     function hideFatal(){$('fatal').hidden=true;$('fatal').textContent=''}
     async function rpc(name,params={}){
       const {data,error}=await sb.rpc(name,params);
-      if(error)throw Error(['PGRST202','PGRST204','42703'].includes(error.code)?'Periksa apakah pembaruan Supabase sampai V10 sudah dijalankan, lalu muat ulang aplikasi.':error.message);
+      if(error)throw Error(['PGRST202','PGRST204','42703'].includes(error.code)?'Periksa apakah pembaruan Supabase sampai V11 sudah dijalankan, lalu muat ulang aplikasi.':error.message);
       return data;
     }
     function showFormError(id,message){$(id).textContent=message;$(id).hidden=!message}
@@ -431,7 +449,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         working=false;
         if(button?.isConnected){
           button.disabled=false;
-          if(['cycle-generate','cycle-continue','cycle-end'].includes(button.id))renderCycleActions(work.cycle?.session);
+          if(['cycle-generate','cycle-found-start','cycle-continue','cycle-end'].includes(button.id))renderCycleActions(work.cycle?.session);
+          if(button.id==='sap-refresh')button.disabled=$('sap-status').dataset.ready!=='true';
         }
       }
     }
@@ -545,7 +564,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const response=await sb.from(TABLE_SESSIONS)
         .select('id,campaign,company,warehouse,warehouse_code,branch,workflow_version,work_type,status,created_at,filter_manufacture,filter_brand,filter_subbrand,is_test,stock_source,stock_grouped')
         .eq('work_type','opname').order('created_at',{ascending:false}).limit(250);
-      if(response.error)throw Error(response.error.code==='42703'?'Jalankan pembaruan Supabase sampai V10, lalu muat ulang aplikasi.':response.error.message);
+      if(response.error)throw Error(response.error.code==='42703'?'Jalankan pembaruan Supabase sampai V11, lalu muat ulang aplikasi.':response.error.message);
       sessions=response.data||[];
       fillSelect('session-select',sessions.map(session=>({
         value:session.id,label:(session.is_test?'[UJI] ':'')+session.campaign+' · '+(session.stock_grouped?session.company:session.warehouse_code)+
@@ -587,6 +606,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       $('account-role').textContent=roleLabels[access.role]+(branch?' · '+branch:' · Semua cabang');
       document.querySelector('[data-view="admin"]').hidden=!isAdmin();
       $('opname-report-panel').hidden=!canValidate();
+      $('found-export-panel').hidden=!canValidate();
       $('report-mode-label').hidden=!isAdmin();
       $('cycle-export-help').textContent=canValidate()?'Menggunakan tanggal laporan di atas.':'Mengunduh hitungan pada tanggal laporan dari sesi yang sudah diakhiri.';
       $('session-mode-label').hidden=!isAdmin();
@@ -639,6 +659,9 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       accessVersion++;
       reportVersion++;
       historyVersion++;
+      stopSapPolling();
+      sapLastSuccess=null;
+      foundDraft=null;
       historyOffset=0;
       $('coverage-table').replaceChildren();
       $('count-history').replaceChildren();
@@ -677,7 +700,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       renderWork('opname');
       renderWork('cycle');
       renderResults();
-      for(const id of ['calc-dialog','count-dialog','scan-dialog','validate-dialog','admin-session-dialog'])if($(id).open)$(id).close();
+      for(const id of ['calc-dialog','count-dialog','scan-dialog','validate-dialog','admin-session-dialog','found-dialog'])if($(id).open)$(id).close();
       if(!user)return;
       renderAccessPage();
       await refreshAccess();
@@ -718,7 +741,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     async function reloadWork(type,id,reset=false){
       await setWork(type,await rpc('cui_inventory_state',{p_id:id}),reset);
     }
-    async function startWork(type){
+    async function startWork(type,foundOnly=false){
       if(!canCount())throw Error('Hanya Penghitung atau Admin yang dapat memulai sesi.');
       const prefix=type==='opname'?'session':'cycle';
       const grouped=type==='opname'&&usesGroupedExcel();
@@ -731,17 +754,21 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       if(!scope)throw Error('Pilih perusahaan dan gudang.');
       const excel=type==='opname'&&usesExcel();
       if(excel&&!opnameImport)throw Error('Pilih file Excel dan tunggu sampai pemeriksaan selesai.');
-      if(!classOptions[prefix].ready)throw Error('Tunggu sampai pilihan klasifikasi barang siap.');
+      if(!foundOnly&&!classOptions[prefix].ready)throw Error('Tunggu sampai pilihan klasifikasi barang siap.');
+      if(foundOnly&&excel)throw Error('Pilih Supabase untuk membuat sesi khusus temuan.');
       if(grouped&&new Set(filteredOpnameImport().map(item=>item.company)).size<2)throw Error('Pilih klasifikasi yang mencakup minimal dua perusahaan.');
       const target=Number($('cycle-target').value);
-      if(type==='cycle'&&(!Number.isSafeInteger(target)||target<1||target>2147483647))throw Error('Isi target cycle count dengan bilangan bulat minimal 1.');
+      if(!foundOnly&&type==='cycle'&&(!Number.isSafeInteger(target)||target<1||target>2147483647))throw Error('Isi target cycle count dengan bilangan bulat minimal 1.');
       if(type==='cycle')cycleLookupVersion++;
       const params={
         ...scope,
         p_campaign:type==='opname'?$('campaign').value.trim():null,
         p_companion:type==='opname'?$('companion').value.trim():null,
       };
-      const sessionId=excel?
+      const sessionId=foundOnly?await rpc('cui_inventory_start_found_only',{
+        p_type:type,p_company:scope.p_company,p_warehouse:scope.p_warehouse,p_branch:scope.p_branch,p_campaign:params.p_campaign,
+        p_companion:params.p_companion,p_test:scope.p_test,
+      }):excel?
         await rpc(grouped?'cui_inventory_start_grouped_excel':'cui_inventory_start_excel',{...params,p_items:opnameImport.items}):
         await rpc('cui_inventory_start_scoped',{...params,p_type:type,p_limit:type==='cycle'?target:null});
       if(type==='opname')await listSessions();
@@ -950,6 +977,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     function renderCycleActions(session){
       $('cycle-generate').disabled=!canCount()||!cycleChecked||Boolean(cycleCandidate)||isCounting(session);
       $('cycle-generate').textContent=session?.status==='completed'?'Mulai sesi berikutnya':'Mulai sesi';
+      $('cycle-found-start').disabled=!canCount()||!selectedScope('cycle')||Boolean(cycleCandidate)||isCounting(session);
       $('cycle-continue').disabled=!cycleCandidate||Boolean(session&&cycleCandidate.id===session.id);
       $('cycle-continue').textContent=cycleCandidate?.status==='completed'?'Lihat hasil hari ini':'Lanjutkan sesi';
       $('cycle-end').disabled=!canCount()||!isCounting(session);
@@ -993,6 +1021,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         const allowed=session?.status==='validation'?canValidate():canCount();
         const startLabel=usesGroupedExcel()?'Mulai sesi gabungan':usesExcel()?'Mulai sesi dari Excel':'Mulai / lanjutkan sesi';
         $('session-actions').innerHTML=(canCount()?'<button type="button" class="secondary" data-start-opname>'+startLabel+'</button>':'')+
+          (canCount()&&!usesExcel()&&(!session||session.status==='completed')?'<button type="button" class="secondary" data-start-found>Mulai sesi khusus temuan</button>':'')+
           (session?'<button type="button" class="secondary" data-refresh-work="opname">Muat ulang sesi</button>':'')+
           (action&&allowed?'<button type="button" class="primary" data-advance-work="opname">'+action+'</button>':'');
       }
@@ -1019,7 +1048,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         num(compared.filter(item=>(item.result2??item.result1)==='diff').length)+' SELISIH'+
         (compared.some(item=>item.result1==='unknown')?' · '+num(compared.filter(item=>item.result1==='unknown').length)+' tanpa stok pembanding':'')+'</div>':'';
       host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>'+esc(title)+'</h2><p>'+esc(intro)+'</p></div>'+
-        (counting&&canCount()?'<button class="primary" type="button" data-scan-work="'+type+'">Scan QR</button>':'')+
+        (counting&&canCount()?'<div class="button-row">'+(session.status==='hit1_active'&&session.branch_locked!==false?'<button class="secondary" type="button" data-add-found="'+type+'">Tambahkan item temuan</button>':'')+
+          '<button class="primary" type="button" data-scan-work="'+type+'">Scan QR</button></div>':'')+
         '</div>'+summary+'<div class="queue-grid'+(session.stock_grouped?' grouped':'')+'"><label>Cari kode atau nama barang<input type="search" id="'+type+'-query" data-queue-query="'+type+'" value="'+esc(queue[type].query)+'"></label>'+
         '<label>Status<select id="'+type+'-filter" data-queue-filter="'+type+'">'+options.map(([key,label])=>'<option value="'+key+'">'+label+'</option>').join('')+'</select></label>'+
         (session.stock_grouped?companyFilter('opname-company-filter',data.items,queue[type].company):'')+'</div>'+
@@ -1051,7 +1081,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const rows=filtered.slice((state.page-1)*size,state.page*size);
       const heading=type==='cycle'?'<th>Hasil</th>':'<th>Hit 1</th><th>Hit 2</th>';
       const body=rows.map(item=>{
-        const label='<td class="queue-label"><strong>'+esc(item.code)+'</strong><br>'+esc(item.name)+
+        const label='<td class="queue-label"><strong>'+esc(item.code)+'</strong>'+(item.found?' <span class="tag warn">Temuan</span>':'')+'<br>'+esc(item.name)+
           (session.stock_grouped?'<br><span class="muted">'+esc(itemScopeLabel(item))+'</span>':'')+'</td><td>'+esc(item.unit||'—')+'</td>';
         const cycleCells=type==='cycle'?'<td class="num">'+num(item.system_qty)+'</td><td class="num">'+num(item.cycle_qty)+'</td><td class="num">'+signedQty(item.cycle_variance)+'</td>':'';
         if(counting){
@@ -1098,6 +1128,36 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       await reloadWork(type,session.id);
       if(type==='cycle')await refreshCycleContext(true);
       toast(next==='completed'?'Sesi telah ditutup.':next==='hit1_closed'?'Hit 1 selesai. Daftar Hit 2 siap.':next==='validation'?'Hit 2 selesai. Daftar validasi siap.':'Hit 2 dimulai.');
+    }
+    function openFound(type){
+      const data=work[type],session=data?.session;
+      if(!canCount()||session?.status!=='hit1_active')return;
+      const choices=new Map();
+      const rows=session.stock_grouped?data.items:[session];
+      for(const row of rows){
+        const key=JSON.stringify([row.company,row.warehouse_code]);
+        choices.set(key,{value:key,label:row.company+' · '+row.warehouse_code});
+      }
+      foundDraft={type,id:session.id};
+      fillSelect('found-scope',[...choices.values()],'Pilih perusahaan dan gudang…');
+      $('found-scope').value=choices.size===1?[...choices.keys()][0]:'';
+      for(const id of ['found-code','found-name','found-unit'])$(id).value='';
+      showFormError('found-error','');
+      $('found-dialog').showModal();
+      $('found-code').focus();
+    }
+    async function submitFound(){
+      const draft=foundDraft;
+      if(!draft||!$('found-scope').value)return;
+      const [company,warehouse]=JSON.parse($('found-scope').value);
+      const code=await rpc('cui_inventory_add_found',{p_id:draft.id,p_company:company,p_warehouse:warehouse,
+        p_code:$('found-code').value.trim(),p_name:$('found-name').value.trim(),p_unit:$('found-unit').value.trim()});
+      if(foundDraft!==draft||!$('found-dialog').open||work[draft.type]?.session.id!==draft.id)return;
+      await reloadWork(draft.type,draft.id);
+      if(foundDraft!==draft||!$('found-dialog').open)return;
+      $('found-dialog').close();
+      foundDraft=null;
+      showCount(draft.type,code);
     }
     function showCount(type,code,prefill={}){
       if(!canCount())return;
@@ -1942,6 +2002,18 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       for(const row of totals.values())recap.push([date,row.plan_date,scope.p_company,scope.p_warehouse,row.code,row.name,row.unit,Number(row.qty.toFixed(10)),row.result,row.manufacture,row.brand,row.subbrand,row.reference_wib?.replace('T',' '),row.stock_qty,row.session_qty,row.variance]);
       downloadWorkbook((scope.p_test?'CUI_UJI_':'CUI_')+'Cycle_Count_'+scope.p_warehouse+'_'+date+'.xlsx',{'Rekap harian':recap,'Detail per rak':details});
     }
+    async function exportFound(){
+      if(!canValidate())throw Error('Ekspor temuan tersedia untuk Admin dan Validator.');
+      const params=reportParams();
+      if(!params.p_day)throw Error('Pilih tanggal temuan terlebih dahulu.');
+      const items=await rpc('cui_inventory_found_export',params);
+      if(!items.length)throw Error('Belum ada item temuan yang tersedia untuk tanggal dan jenis hitung ini.');
+      const basis={zero:'Saldo sistem nol',missing:'Saldo sistem kosong / item belum terdaftar',outside_excel:'Di luar data Excel'};
+      const rows=[['Tanggal temuan (WIB)','Sesi','Tahap','Perusahaan','Cabang','Kode Gudang','Item Code','Deskripsi','Satuan','Kondisi acuan','Total Fisik','Blok dan rak','Petugas yang menemukan','Catatan validasi']];
+      for(const i of items)rows.push([i.found_wib?.replace('T',' '),i.campaign,stageLabels[i.status],i.company,i.branch,i.warehouse_code,
+        i.code,i.name,i.unit,basis[i.found_basis],i.physical_qty,i.locations,i.found_by,i.validation_note]);
+      downloadWorkbook('Temuan_'+(params.p_type==='cycle'?'Cycle_Count':'Stok_Opname')+'_'+params.p_day+(params.p_test?'_UJI':'')+'.xlsx',{'Item temuan':rows});
+    }
     async function requestBranch(){
       if(!$('request-branch').value)throw Error('Pilih cabang tempat Anda bekerja.');
       await rpc('cui_request_branch',{p_branch:$('request-branch').value});
@@ -2072,7 +2144,59 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         renderResults();
         refreshReports();
       }
-      if(view==='admin')refreshAdmin().catch(error=>showFatal(error.message));
+      if(view==='admin'){
+        refreshAdmin().catch(error=>showFatal(error.message));
+        loadSapStatus();
+      }else stopSapPolling();
+    }
+    function stopSapPolling(){
+      clearTimeout(sapTimer);
+      sapVersion++;
+    }
+    async function reloadMasterAfterSap(){
+      const user=currentUser;
+      const rows=await rpc('cui_inventory_warehouses');
+      if(currentUser!==user||!isAdmin())return;
+      metaCombos=rows;
+      fillScopes();
+      for(const [key,cache] of Object.entries(classOptions)){
+        cache.ready=false;
+        await loadClassification(key,currentClassification(key));
+      }
+      renderStats('opname',work.opname);
+      renderStats('cycle',work.cycle);
+    }
+    async function loadSapStatus(queueJob=false){
+      if(!isAdmin()||$('view-admin').hidden)return;
+      const version=++sapVersion;
+      clearTimeout(sapTimer);
+      const host=$('sap-status');
+      const button=$('sap-refresh');
+      if(queueJob){host.dataset.ready='false';button.disabled=true;host.textContent='Mengirim permintaan refresh…'}
+      try{
+        const result=await rpc(queueJob?'cui_request_sap_refresh':'cui_sap_refresh_status');
+        if(version!==sapVersion)return;
+        const job=result.job;
+        const pending=job?.status==='queued'||job?.status==='running';
+        const status=job?.status==='queued'?'Permintaan menunggu penghubung SAP.':job?.status==='running'?'Sedang membaca SAP CUI dan PAU…':
+          job?.status==='failed'?'Refresh gagal. '+(job.message||'Periksa program penghubung.'):
+          job?.status==='succeeded'?'Refresh terakhir berhasil. '+(job.message||''):'Belum ada refresh melalui menu ini.';
+        host.dataset.ready=String(result.online&&!pending);
+        button.disabled=host.dataset.ready!=='true';
+        host.textContent=status+(result.last_success?' Terakhir berhasil '+timeWib(result.last_success)+'.':'')+
+          (!result.online&&!pending?' Penghubung SAP sedang offline.':'');
+        if(result.last_success&&result.last_success!==sapLastSuccess){
+          sapLastSuccess=result.last_success;
+          await reloadMasterAfterSap();
+        }
+      }catch(error){
+        if(version!==sapVersion)return;
+        host.dataset.ready='false';
+        button.disabled=true;
+        host.textContent=error.message;
+      }finally{
+        if(version===sapVersion&&!$('view-admin').hidden)sapTimer=setTimeout(()=>loadSapStatus(),6000);
+      }
     }
 
     $('login-form').addEventListener('submit',login);
@@ -2084,6 +2208,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       doWork(event.submitter,requestBranch,'access-error');
     });
     $('admin-users-refresh').addEventListener('click',event=>doWork(event.currentTarget,loadAdminUsers));
+    $('sap-refresh').addEventListener('click',event=>doWork(event.currentTarget,()=>loadSapStatus(true)));
+    $('sap-status-reload').addEventListener('click',event=>doWork(event.currentTarget,()=>loadSapStatus()));
     $('admin-session-search').addEventListener('submit',event=>{
       event.preventDefault();
       doWork(event.submitter,loadAdminSessions);
@@ -2156,6 +2282,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     $('opname-template').addEventListener('click',event=>doWork(event.currentTarget,downloadOpnameTemplate));
     $('cycle-mode').addEventListener('change',()=>refreshCycleContext());
     $('cycle-generate').addEventListener('click',event=>doWork(event.currentTarget,()=>startWork('cycle')));
+    $('cycle-found-start').addEventListener('click',event=>doWork(event.currentTarget,()=>startWork('cycle',true)));
     $('cycle-continue').addEventListener('click',event=>doWork(event.currentTarget,continueCycle));
     $('cycle-refresh').addEventListener('click',event=>doWork(event.currentTarget,()=>reloadWork('cycle',work.cycle.session.id)));
     $('cycle-end').addEventListener('click',event=>doWork(event.currentTarget,()=>advanceWork('cycle')));
@@ -2177,6 +2304,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     $('cycle-month').addEventListener('change',()=>loadCalendar());
     $('cycle-calendar-refresh').addEventListener('click',()=>loadCalendar());
     $('export-button').addEventListener('click',event=>doWork(event.currentTarget,exportOpname));
+    $('found-export').addEventListener('click',event=>doWork(event.currentTarget,exportFound));
     $('report-refresh').addEventListener('click',event=>doWork(event.currentTarget,refreshReports));
     for(const id of ['cycle-export-date','report-type','report-mode'])$(id).addEventListener('change',refreshReports);
     $('history-search').addEventListener('submit',event=>{event.preventDefault();loadCountHistory()});
@@ -2184,6 +2312,9 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     $('history-next').addEventListener('click',()=>loadCountHistory(historyOffset+30));
     $('count-form').addEventListener('submit',event=>{
       event.preventDefault();doWork(event.submitter,()=>submitCount(),'count-error');
+    });
+    $('found-form').addEventListener('submit',event=>{
+      event.preventDefault();doWork(event.submitter,submitFound,'found-error');
     });
     $('count-form').addEventListener('input',clearCountChoice);
     $('count-add').addEventListener('click',event=>doWork(event.currentTarget,()=>submitCount('add'),'count-error'));
@@ -2270,6 +2401,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       if(Object.hasOwn(action,'retryCycle'))refreshCycleContext(Boolean(work.cycle));
       if(action.calendarDay)pickCalendarDay(action.calendarDay);
       if(Object.hasOwn(action,'startOpname'))doWork(button,()=>startWork('opname'));
+      if(Object.hasOwn(action,'startFound'))doWork(button,()=>startWork('opname',true));
+      if(action.addFound)openFound(action.addFound);
       if(action.refreshWork)doWork(button,()=>reloadWork(action.refreshWork,work[action.refreshWork].session.id));
       if(action.advanceWork)doWork(button,()=>advanceWork(action.advanceWork));
       if(action.countWork)showCount(action.countWork,action.item);
