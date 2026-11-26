@@ -177,7 +177,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         <button class="nav" data-view="panduan"><span>?</span>Panduan</button>
         <button class="nav" data-view="admin" hidden><span>⚙</span>Admin</button>
       </nav>
-      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V11.1</div>
+      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V12.0</div>
     </aside>
     <div class="workspace">
       <header class="topbar"><span class="breadcrumb">Operasional / Supply Chain / <strong id="crumb">Stok opname</strong></span><div class="account"><span id="account-email" class="account-email"></span><span id="account-role" class="tag blue"></span><button id="logout-button" class="secondary">Keluar</button></div></header>
@@ -307,7 +307,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
             <div id="admin-users"></div>
           </section>
           <section class="panel">
-            <div class="panel-head"><div><h2>Sesi uji</h2><p>Gunakan nama, gudang, cabang, atau ID untuk memastikan sesi yang dipilih. Untuk sesi baru, pilih jenis Uji saat membuat sesi.</p></div></div>
+            <div class="panel-head"><div><h2>Kelola sesi</h2><p>Cari dengan nama sesi, gudang, cabang, atau ID.</p></div></div>
             <form id="admin-session-search" class="queue-grid"><label>Cari sesi<input id="admin-session-query" type="search"></label><button class="primary" type="submit">Cari sesi</button></form>
             <div id="admin-sessions" style="margin-top:14px"></div>
           </section>
@@ -425,7 +425,10 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     function hideFatal(){$('fatal').hidden=true;$('fatal').textContent=''}
     async function rpc(name,params={}){
       const {data,error}=await sb.rpc(name,params);
-      if(error)throw Error(['PGRST202','PGRST204','42703'].includes(error.code)?'Periksa apakah pembaruan Supabase sampai V11 sudah dijalankan, lalu muat ulang aplikasi.':error.message);
+      if(error){
+        const version=name==='cui_admin_delete_operational'?'V12':'V11';
+        throw Error(['PGRST202','PGRST204','42703'].includes(error.code)?'Periksa apakah pembaruan Supabase sampai '+version+' sudah dijalankan, lalu muat ulang aplikasi.':error.message);
+      }
       return data;
     }
     function showFormError(id,message){$(id).textContent=message;$(id).hidden=!message}
@@ -2063,10 +2066,11 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         '<thead><tr><th>Sesi</th><th>Gudang / cabang</th><th>Dibuat</th><th>Catatan hitung</th><th>Tindakan</th></tr></thead><tbody>'+
         rows.map(s=>{
           const label=s.work_type==='cycle'?'Cycle count':s.workflow_version===1?'Arsip lama':stageLabels[s.status]||s.status;
-          const action=s.is_test?'<button type="button" class="danger" data-admin-session="delete" data-session-id="'+esc(s.id)+'">Hapus sesi uji</button>':
-            s.branch_locked?'<span class="muted">Operasional</span>':
-            '<button type="button" class="secondary" data-admin-session="mark" data-session-id="'+esc(s.id)+'">Tandai sebagai uji</button>';
-          return '<tr><td><strong>'+esc(s.campaign)+'</strong> '+(s.is_test?'<span class="tag warn">Uji</span>':'')+
+          const deleteAction=s.is_test?'delete':'delete-operational';
+          const action='<button type="button" class="danger" data-admin-session="'+deleteAction+'" data-session-id="'+esc(s.id)+'">'+adminSessionActions[deleteAction].title+'</button>'+
+            (!s.is_test&&!s.branch_locked?' <button type="button" class="secondary" data-admin-session="mark" data-session-id="'+esc(s.id)+'">Tandai sebagai uji</button>':'');
+          const tag=s.is_test?'<span class="tag warn">Uji</span>':'<span class="tag blue">Operasional</span>';
+          return '<tr><td><strong>'+esc(s.campaign)+'</strong> '+tag+
             '<br><small>'+esc(label)+' · '+esc(s.id)+'</small></td><td>'+esc(s.warehouse)+' ('+esc(s.warehouse_code)+')<br>'+esc(s.branch||'Cabang belum ditetapkan')+'</td>'+
             '<td>'+esc(timeWib(s.created_at))+'</td><td>'+num(s.count_rows)+'</td><td>'+action+'</td></tr>';
         }).join('')+'</tbody></table></div>':'<div class="empty">Tidak ada sesi yang cocok.</div>';
@@ -2074,17 +2078,24 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     async function refreshAdmin(){
       await Promise.all([loadAdminUsers(),loadAdminSessions()]);
     }
+    const adminSessionActions={
+      mark:{title:'Tandai sesi sebagai uji',word:'UJI',rpc:'cui_admin_mark_test',done:'Sesi ditandai sebagai uji.'},
+      delete:{title:'Hapus sesi uji',word:'HAPUS',rpc:'cui_admin_delete_test',done:'Sesi uji dihapus.'},
+      'delete-operational':{title:'Hapus sesi operasional',word:'HAPUS OPERASIONAL',rpc:'cui_admin_delete_operational',done:'Sesi operasional dihapus.'},
+    };
     function openAdminSession(action,id){
-      if(!isAdmin())return;
+      if(!isAdmin()||!Object.hasOwn(adminSessionActions,action))return;
       const session=adminSessions.find(row=>row.id===id);
       if(!session)return;
       adminSessionAction={action,id};
-      const deleting=action==='delete';
-      $('admin-session-title').textContent=deleting?'Hapus sesi uji':'Tandai sesi sebagai uji';
-      $('admin-session-detail').textContent=session.campaign+' · '+session.warehouse_code+' · '+(session.branch||'Cabang belum ditetapkan')+
-        ' · '+timeWib(session.created_at)+' · ID '+id+'. '+(deleting?
-          'Penghapusan permanen mencakup catatan hitung dan validasi sesi ini.':'Tindakan dicatat. Sesi ini akan masuk daftar uji.');
-      $('admin-session-label').firstChild.textContent='Ketik '+(deleting?'HAPUS':'UJI');
+      const config=adminSessionActions[action];
+      const deleting=action!=='mark';
+      $('admin-session-title').textContent=config.title;
+      $('admin-session-detail').textContent=session.campaign+' · '+session.company+' · '+session.warehouse+' ('+session.warehouse_code+') · '+
+        (session.branch||'Cabang belum ditetapkan')+' · '+timeWib(session.created_at)+' · ID '+id+'. '+(deleting?
+          num(session.count_rows)+' catatan hitung. Daftar item, hitungan, dan validasi sesi ini akan dihapus permanen. Sesi juga hilang dari histori dan laporan.':
+          'Tindakan dicatat. Sesi ini akan masuk daftar uji.');
+      $('admin-session-label').firstChild.textContent='Ketik '+config.word;
       $('admin-session-submit').textContent=deleting?'Hapus permanen':'Tandai sebagai uji';
       $('admin-session-reason').value='';
       $('admin-session-confirm').value='';
@@ -2095,10 +2106,10 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     async function submitAdminSession(){
       if(!isAdmin()||!adminSessionAction)return;
       const {action,id}=adminSessionAction;
-      const deleting=action==='delete';
-      await rpc(deleting?'cui_admin_delete_test':'cui_admin_mark_test',{
-        p_id:id,p_reason:$('admin-session-reason').value.trim(),p_confirm:$('admin-session-confirm').value.trim(),
-      });
+      const config=adminSessionActions[action];
+      const reason=$('admin-session-reason').value.trim(),word=$('admin-session-confirm').value.trim();
+      if(!reason||word!==config.word)throw Error('Masukkan alasan dan ketik '+config.word+'.');
+      await rpc(config.rpc,{p_id:id,p_reason:reason,p_confirm:word});
       $('admin-session-dialog').close();
       adminSessionAction=null;
       if(work.opname?.session.id===id||legacyReport?.session.id===id){
@@ -2108,8 +2119,10 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         renderResults();
       }
       if(work.cycle?.session.id===id)work.cycle=null;
-      await Promise.all([listSessions(),loadAdminSessions(),refreshCycleContext(Boolean(work.cycle))]);
-      toast(deleting?'Sesi uji dihapus.':'Sesi ditandai sebagai uji.');
+      historyOffset=0;
+      toast(config.done);
+      await Promise.all([listSessions(),loadAdminSessions(),refreshCycleContext(Boolean(work.cycle))])
+        .catch(()=>showFatal(config.done+' Muat ulang halaman untuk memperbarui daftar.'));
     }
     const titles={
       opname:['Stok opname','Hitung stok, cek selisih, dan tindak lanjuti item per tahap.'],
@@ -2117,7 +2130,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       cycle:['Cycle count','Lanjutkan hitungan harian yang masih tersisa.'],
       qr:['QR item & lokasi','Buat dan cetak label satu per satu atau dari Excel.'],
       panduan:['Panduan','Petunjuk penghitungan dan pembuatan label.'],
-      admin:['Admin','Kelola akses pengguna dan sesi uji.'],
+      admin:['Admin','Kelola akses pengguna serta sesi operasional dan uji.'],
     };
     function setView(name){
       const allowed=name==='admin'?isAdmin():name==='hasil'?access?.status==='active':true;
