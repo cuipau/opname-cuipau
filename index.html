@@ -177,7 +177,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         <button class="nav" data-view="panduan"><span>?</span>Panduan</button>
         <button class="nav" data-view="admin" hidden><span>⚙</span>Admin</button>
       </nav>
-      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V11.0</div>
+      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V11.1</div>
     </aside>
     <div class="workspace">
       <header class="topbar"><span class="breadcrumb">Operasional / Supply Chain / <strong id="crumb">Stok opname</strong></span><div class="account"><span id="account-email" class="account-email"></span><span id="account-role" class="tag blue"></span><button id="logout-button" class="secondary">Keluar</button></div></header>
@@ -303,11 +303,6 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         </section></section>
         <section id="view-admin" class="view" hidden>
           <section class="panel">
-            <div class="panel-head"><div><h2>Refresh stok SAP</h2><p>Perbarui master stok CUI dan PAU di Supabase, termasuk stok nol.</p></div><button id="sap-refresh" class="primary" type="button" disabled>Refresh data SAP</button></div>
-            <p id="sap-status" role="status" class="activity-line muted"></p>
-            <button id="sap-status-reload" class="secondary" type="button">Periksa status penghubung</button>
-          </section>
-          <section class="panel">
             <div class="panel-head"><div><h2>Akses pengguna</h2><p>Setujui cabang dan pilih peran untuk permintaan yang masuk.</p></div><button id="admin-users-refresh" type="button" class="secondary">Muat ulang pengguna</button></div>
             <div id="admin-users"></div>
           </section>
@@ -394,7 +389,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     const queue={opname:{page:1,query:'',filter:''},cycle:{page:1,query:'',filter:''}};
     const resultPage={number:1,query:'',company:''};
     let reportVersion=0,historyVersion=0,historyOffset=0;
-    let foundDraft=null,sapTimer=null,sapVersion=0,sapLastSuccess=null;
+    let foundDraft=null;
     let cameraJob=null,scannerLibraryRequest=null;
     let cameraReaderNumber=0;
     const roleLabels={admin:'Admin',counter:'Penghitung',validator:'Validator'};
@@ -450,7 +445,6 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         if(button?.isConnected){
           button.disabled=false;
           if(['cycle-generate','cycle-found-start','cycle-continue','cycle-end'].includes(button.id))renderCycleActions(work.cycle?.session);
-          if(button.id==='sap-refresh')button.disabled=$('sap-status').dataset.ready!=='true';
         }
       }
     }
@@ -659,8 +653,6 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       accessVersion++;
       reportVersion++;
       historyVersion++;
-      stopSapPolling();
-      sapLastSuccess=null;
       foundDraft=null;
       historyOffset=0;
       $('coverage-table').replaceChildren();
@@ -2146,56 +2138,6 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       }
       if(view==='admin'){
         refreshAdmin().catch(error=>showFatal(error.message));
-        loadSapStatus();
-      }else stopSapPolling();
-    }
-    function stopSapPolling(){
-      clearTimeout(sapTimer);
-      sapVersion++;
-    }
-    async function reloadMasterAfterSap(){
-      const user=currentUser;
-      const rows=await rpc('cui_inventory_warehouses');
-      if(currentUser!==user||!isAdmin())return;
-      metaCombos=rows;
-      fillScopes();
-      for(const [key,cache] of Object.entries(classOptions)){
-        cache.ready=false;
-        await loadClassification(key,currentClassification(key));
-      }
-      renderStats('opname',work.opname);
-      renderStats('cycle',work.cycle);
-    }
-    async function loadSapStatus(queueJob=false){
-      if(!isAdmin()||$('view-admin').hidden)return;
-      const version=++sapVersion;
-      clearTimeout(sapTimer);
-      const host=$('sap-status');
-      const button=$('sap-refresh');
-      if(queueJob){host.dataset.ready='false';button.disabled=true;host.textContent='Mengirim permintaan refresh…'}
-      try{
-        const result=await rpc(queueJob?'cui_request_sap_refresh':'cui_sap_refresh_status');
-        if(version!==sapVersion)return;
-        const job=result.job;
-        const pending=job?.status==='queued'||job?.status==='running';
-        const status=job?.status==='queued'?'Permintaan menunggu penghubung SAP.':job?.status==='running'?'Sedang membaca SAP CUI dan PAU…':
-          job?.status==='failed'?'Refresh gagal. '+(job.message||'Periksa program penghubung.'):
-          job?.status==='succeeded'?'Refresh terakhir berhasil. '+(job.message||''):'Belum ada refresh melalui menu ini.';
-        host.dataset.ready=String(result.online&&!pending);
-        button.disabled=host.dataset.ready!=='true';
-        host.textContent=status+(result.last_success?' Terakhir berhasil '+timeWib(result.last_success)+'.':'')+
-          (!result.online&&!pending?' Penghubung SAP sedang offline.':'');
-        if(result.last_success&&result.last_success!==sapLastSuccess){
-          sapLastSuccess=result.last_success;
-          await reloadMasterAfterSap();
-        }
-      }catch(error){
-        if(version!==sapVersion)return;
-        host.dataset.ready='false';
-        button.disabled=true;
-        host.textContent=error.message;
-      }finally{
-        if(version===sapVersion&&!$('view-admin').hidden)sapTimer=setTimeout(()=>loadSapStatus(),6000);
       }
     }
 
@@ -2208,8 +2150,6 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       doWork(event.submitter,requestBranch,'access-error');
     });
     $('admin-users-refresh').addEventListener('click',event=>doWork(event.currentTarget,loadAdminUsers));
-    $('sap-refresh').addEventListener('click',event=>doWork(event.currentTarget,()=>loadSapStatus(true)));
-    $('sap-status-reload').addEventListener('click',event=>doWork(event.currentTarget,()=>loadSapStatus()));
     $('admin-session-search').addEventListener('submit',event=>{
       event.preventDefault();
       doWork(event.submitter,loadAdminSessions);
@@ -2420,4 +2360,3 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
   </script>
 </body>
 </html>
-<!-- Publikasi ulang V11 -->
