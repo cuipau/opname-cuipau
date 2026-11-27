@@ -45,6 +45,14 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     .sidebar{position:fixed;inset:0 auto 0 0;width:var(--side);background:var(--navy);color:#fff;padding:18px 14px;display:flex;flex-direction:column;z-index:20}.brand{display:flex;align-items:center;gap:12px;background:#fff;border-radius:8px;padding:10px;text-decoration:none;color:var(--navy);min-height:66px}.brand img{width:54px;height:48px;object-fit:contain}.brand strong{display:block;font-size:15px}.brand small{font-size:11px;color:var(--grey)}.nav-label{font-size:12px;letter-spacing:1.2px;color:#AAB7D3;margin:28px 10px 10px}.nav{width:100%;min-height:46px;background:transparent;color:#DCE3F2;border-radius:7px;text-align:left;padding:10px 12px;margin:3px 0;font-size:14px;font-weight:700;display:flex;align-items:center;gap:11px}.nav span{width:22px;text-align:center;font-size:18px}.nav.active{background:var(--yellow);color:var(--text)}.nav:hover:not(.active){background:#ffffff12}.sidebar-foot{margin-top:auto;border-top:1px solid #ffffff22;padding:16px 8px 5px;font-size:12px;color:#C8D2E7;line-height:1.55}
     .workspace{margin-left:var(--side);min-height:100dvh}.topbar{height:64px;position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px}.breadcrumb{font-size:14px;color:var(--grey)}.account{display:flex;gap:10px;align-items:center}.account-email{font-size:13px;color:var(--navy);font-weight:700;max-width:250px;overflow:hidden;text-overflow:ellipsis}main{padding:28px;max-width:1680px;margin:auto}.page-head{display:flex;justify-content:space-between;align-items:start;gap:18px;margin-bottom:22px}.page-head p{margin:0;color:var(--grey);font-size:14px}
     .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px 22px;box-shadow:0 2px 8px #2135690d;margin-bottom:20px}.panel-head{display:flex;align-items:start;justify-content:space-between;gap:14px;margin-bottom:18px}.panel-head h2{margin:0 0 5px}.panel-head p{margin:0;color:var(--grey);font-size:14px;line-height:1.5}.notice{padding:14px 16px;border:1px solid #D9E0F4;border-left:4px solid var(--blue);background:var(--blue-soft);border-radius:7px;font-size:14px;line-height:1.55;margin-bottom:16px}.notice.warning{background:var(--yellow-soft);border-color:#F5DF77;border-left-color:var(--yellow)}.notice.error{background:var(--red-soft);border-color:#F2C7C9;border-left-color:var(--red);color:#842326}.notice.success{background:var(--green-soft);border-color:#C6E8D5;border-left-color:var(--green)}
+    .data-status{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,355px),1fr));gap:12px;margin-bottom:20px}
+    .data-status-card{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:13px 15px;min-width:0}
+    .data-status-card[data-tone=good]{border-left-color:var(--green)}.data-status-card[data-tone=warn]{border-left-color:var(--yellow)}.data-status-card[data-tone=bad]{border-left-color:var(--red)}
+    .data-status-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+    .data-status-head h2{margin:0;color:var(--navy);font-size:15px}.data-status-head button{min-height:30px;padding:3px 6px;font-size:13px}
+    .data-status-card p{margin:5px 0 0;font-size:13px;line-height:1.45;color:#4B5563}.data-status-card strong{display:block;margin-top:3px;color:var(--navy);font-size:17px}
+    .data-status-card[data-tone=bad] .data-status-detail{color:#A32125}
+    @media print{.data-status{display:none!important}}
     .workflow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-bottom:20px}.workflow-step{position:relative;text-align:center;padding:10px 6px;color:var(--grey);font-size:13px}.workflow-step:before{content:"";position:absolute;top:24px;left:0;right:0;height:3px;background:var(--border)}.workflow-step:first-child:before{left:50%}.workflow-step:last-child:before{right:50%}.workflow-dot{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid var(--border);display:grid;place-items:center;margin:0 auto 8px;font-size:12px;font-weight:900}.workflow-step.done .workflow-dot{background:var(--green);border-color:var(--green);color:#fff}.workflow-step.done:before{background:var(--green)}.workflow-step.active .workflow-dot{background:var(--yellow);border-color:var(--navy);color:var(--navy)}.workflow-step.active{color:var(--navy);font-weight:800}
     .session-grid{display:grid;grid-template-columns:1.1fr 1fr 1.4fr 1fr;gap:14px;align-items:end}.session-open{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}.session-banner{display:flex;justify-content:space-between;gap:16px;align-items:center;background:var(--blue-soft);border:1px solid #D7DEF5;border-radius:8px;padding:15px 17px;margin-top:16px}.session-banner strong{color:var(--navy)}.stage-tag,.tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800}.stage-tag{background:var(--yellow);color:var(--text)}.tag.neutral{background:#EEF0F3;color:#4C5564}.tag.good{background:var(--green-soft);color:var(--green)}.tag.warn{background:var(--yellow-soft);color:#6C5600}.tag.bad{background:var(--red-soft);color:#A32125}.tag.blue{background:var(--blue-soft);color:var(--navy)}.session-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}.locked-note{font-size:13px;color:var(--grey);margin-right:auto;align-self:center}
     .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}.stat{background:#fff;border:1px solid var(--border);border-top:3px solid var(--blue);border-radius:10px;padding:17px}.stat:nth-child(2){border-top-color:var(--yellow)}.stat:nth-child(3){border-top-color:var(--red)}.stat:nth-child(4){border-top-color:var(--green)}.stat small{display:block;font-size:12px;color:var(--grey);font-weight:700}.stat strong{display:block;font-size:30px;color:var(--navy);margin:8px 0 4px}.stat span{font-size:13px;color:var(--grey)}
@@ -177,13 +185,29 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         <button class="nav" data-view="panduan"><span>?</span>Panduan</button>
         <button class="nav" data-view="admin" hidden><span>⚙</span>Admin</button>
       </nav>
-      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V12.0</div>
+      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V13.0</div>
     </aside>
     <div class="workspace">
       <header class="topbar"><span class="breadcrumb">Operasional / Supply Chain / <strong id="crumb">Stok opname</strong></span><div class="account"><span id="account-email" class="account-email"></span><span id="account-role" class="tag blue"></span><button id="logout-button" class="secondary">Keluar</button></div></header>
       <main>
-        <section class="page-head"><div><p class="eyebrow">INVENTORY WORKSPACE</p><h1 id="page-title">Stok opname</h1><p id="page-description">Kelola Hit 1, Hit 2, dan validasi dalam urutan yang terkunci.</p></div><span id="save-state" class="tag blue">Siap</span></section>
+        <section class="page-head"><div><p class="eyebrow">INVENTORY WORKSPACE</p><h1 id="page-title">Stok opname</h1><p id="page-description">Kelola Hit 1, Hit 2, dan validasi dalam urutan yang terkunci.</p></div></section>
         <div id="fatal" class="notice error" hidden></div>
+        <section class="data-status" aria-label="Status data stok">
+          <div id="sap-data-status" class="data-status-card" role="status">
+            <div class="data-status-head"><h2>SAP → Supabase</h2></div>
+            <p>Master stok terakhir berhasil diperbarui · CUI dan PAU</p>
+            <strong id="sap-data-time">Belum diketahui</strong>
+            <p id="sap-data-detail" class="data-status-detail">Menunggu data Supabase.</p>
+            <p id="sap-data-cached" hidden>Informasi dari pemeriksaan sebelumnya.</p>
+          </div>
+          <div id="web-data-status" class="data-status-card">
+            <div class="data-status-head"><h2>Supabase → Web</h2><button id="check-master-data" class="text-btn" type="button">Periksa data Supabase</button></div>
+            <div role="status"><p>Terakhir berhasil membaca master gudang</p>
+              <strong id="web-data-time">Belum terbaca</strong>
+              <p id="web-data-detail" class="data-status-detail">Menunggu pemeriksaan.</p>
+            </div>
+          </div>
+        </section>
         <section id="view-opname" class="view">
           <div id="workflow" class="workflow"></div>
           <section class="panel session-panel">
@@ -396,6 +420,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     const branchKey=value=>String(value??'').trim().replace(/\s+/g,' ').toLowerCase();
     const warehouseValue=(company,code,branch)=>[company,code,branchKey(branch)].join('||');
     let access=null,adminSessions=[],adminSessionAction=null,accessVersion=0;
+    let masterDataReady=false,masterReadAt=null,sapStatusKnown=false;
     const isAdmin=()=>access?.status==='active'&&access.role==='admin';
     const canCount=()=>access?.status==='active'&&['admin','counter'].includes(access.role);
     const canValidate=()=>access?.status==='active'&&['admin','validator'].includes(access.role);
@@ -417,7 +442,6 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3500);
     }
     function setState(message){
-      $('save-state').textContent=message;
       $('sidebar-state').textContent=message;
       $('footer-state').textContent=message;
     }
@@ -612,6 +636,78 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       renderOpnameImport();
       $('cycle-mode-label').hidden=!isAdmin();
     }
+    function resetMasterStatus(){
+      masterDataReady=false;masterReadAt=null;sapStatusKnown=false;
+      $('sap-data-status').dataset.tone='';
+      $('sap-data-time').textContent='Belum diketahui';
+      $('sap-data-detail').textContent='Menunggu data Supabase.';
+      $('sap-data-cached').hidden=true;
+      $('web-data-status').dataset.tone='';
+      $('web-data-time').textContent='Belum terbaca';
+      $('web-data-detail').textContent='Menunggu pemeriksaan.';
+    }
+    function displaySapStatus(snapshot){
+      const status=snapshot.sap_last_attempt_status;
+      const labels={
+        succeeded:['good','Percobaan terakhir berhasil'],
+        failed:['bad','Percobaan terakhir gagal'],
+        running:['warn','Refresh sedang berjalan sejak'],
+        queued:['warn','Permintaan menunggu penghubung sejak'],
+        stalled:['warn','Penghubung berhenti merespons. Percobaan dimulai'],
+        none:['','Belum ada percobaan refresh tercatat'],
+      };
+      sapStatusKnown=Object.hasOwn(labels,status);
+      const [tone,label]=sapStatusKnown?labels[status]:['warn','Pasang pembaruan Supabase V13 untuk melihat waktu refresh SAP.'];
+      $('sap-data-status').dataset.tone=tone;
+      $('sap-data-time').textContent=snapshot.sap_last_success_at?timeWib(snapshot.sap_last_success_at):(sapStatusKnown?'Belum tercatat':'Belum diketahui');
+      $('sap-data-detail').textContent=label+(snapshot.sap_last_attempt_at?' · '+timeWib(snapshot.sap_last_attempt_at):'');
+      $('sap-data-cached').hidden=true;
+    }
+    async function readMasterStatus(){
+      const {data,error}=await sb.rpc('cui_inventory_master_status');
+      if(error?.code==='PGRST202'){
+        const warehouses=await rpc('cui_inventory_warehouses');
+        return {warehouses,read_at:new Date().toISOString(),device_clock:true};
+      }
+      if(error)throw Error(error.message);
+      if(!Array.isArray(data?.warehouses)||!data.read_at||!Number.isFinite(Date.parse(data.read_at))){
+        throw Error('Respons data master Supabase tidak dapat dibaca.');
+      }
+      return data;
+    }
+    async function checkMasterData(applyMaster=false){
+      const version=accessVersion;
+      const button=$('check-master-data'),detail=$('web-data-detail');
+      button.disabled=true;
+      detail.textContent='Memeriksa master gudang…';
+      try{
+        const snapshot=await readMasterStatus();
+        if(version!==accessVersion)return;
+        if(applyMaster){
+          metaCombos=snapshot.warehouses;
+          fillScopes();
+          masterDataReady=true;
+        }
+        masterReadAt=snapshot.read_at;
+        $('web-data-time').textContent=timeWib(masterReadAt);
+        $('web-data-status').dataset.tone='good';
+        detail.textContent=snapshot.warehouses.length?'Master gudang berhasil dibaca.':'Master terbaca. Belum ada gudang untuk akses ini.';
+        if(snapshot.device_clock)detail.textContent+=' Waktu dari perangkat.';
+        displaySapStatus(snapshot);
+        setState('Supabase aktif');
+      }catch(error){
+        if(version!==accessVersion)return;
+        $('web-data-status').dataset.tone='bad';
+        detail.textContent='Gagal membaca master gudang. '+(masterReadAt?'Waktu di atas adalah pembacaan terakhir yang berhasil.':'Coba periksa kembali.');
+        $('sap-data-status').dataset.tone='warn';
+        $('sap-data-cached').hidden=!sapStatusKnown;
+        if(!sapStatusKnown)$('sap-data-detail').textContent='Status SAP belum dapat diperiksa.';
+        setState('Perlu pemeriksaan');
+        if(applyMaster)throw error;
+      }finally{
+        if(version===accessVersion)button.disabled=false;
+      }
+    }
     async function refreshAccess(){
       const user=currentUser;
       if(!user)return;
@@ -632,10 +728,8 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         $('account-email').textContent=user.email||'Pengguna terdaftar';
         renderRoleAccess();
         setState('Memuat master gudang…');
-        const rows=await rpc('cui_inventory_warehouses');
+        await checkMasterData(true);
         if(version!==accessVersion||currentUser?.id!==user.id)return;
-        metaCombos=rows;
-        fillScopes();
         await listSessions();
         if(version!==accessVersion)return;
         setState('Supabase aktif');
@@ -654,6 +748,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       currentUser=user||null;
       access=null;
       accessVersion++;
+      resetMasterStatus();
       reportVersion++;
       historyVersion++;
       foundDraft=null;
@@ -2155,6 +2250,10 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     }
 
     $('login-form').addEventListener('submit',login);
+    $('check-master-data').addEventListener('click',()=>{
+      if(masterDataReady)checkMasterData();
+      else{hideFatal();refreshAccess()}
+    });
     $('logout-button').addEventListener('click',event=>doWork(event.currentTarget,signOut));
     $('access-logout').addEventListener('click',event=>doWork(event.currentTarget,signOut,'access-error'));
     $('refresh-access').addEventListener('click',event=>doWork(event.currentTarget,refreshAccess,'access-error'));
