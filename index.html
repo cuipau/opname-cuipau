@@ -52,6 +52,9 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     .data-status-head h2{margin:0;color:var(--navy);font-size:15px}.data-status-head button{min-height:30px;padding:3px 6px;font-size:13px}
     .data-status-card p{margin:5px 0 0;font-size:13px;line-height:1.45;color:#4B5563}.data-status-card strong{display:block;margin-top:3px;color:var(--navy);font-size:17px}
     .data-status-card[data-tone=bad] .data-status-detail{color:#A32125}
+    .session-options{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+    .session-options summary{width:fit-content;color:var(--navy);font-size:14px;font-weight:700;cursor:pointer}
+    .session-options p{margin:10px 0;color:var(--grey);font-size:14px;line-height:1.5}
     @media print{.data-status{display:none!important}}
     .workflow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-bottom:20px}.workflow-step{position:relative;text-align:center;padding:10px 6px;color:var(--grey);font-size:13px}.workflow-step:before{content:"";position:absolute;top:24px;left:0;right:0;height:3px;background:var(--border)}.workflow-step:first-child:before{left:50%}.workflow-step:last-child:before{right:50%}.workflow-dot{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid var(--border);display:grid;place-items:center;margin:0 auto 8px;font-size:12px;font-weight:900}.workflow-step.done .workflow-dot{background:var(--green);border-color:var(--green);color:#fff}.workflow-step.done:before{background:var(--green)}.workflow-step.active .workflow-dot{background:var(--yellow);border-color:var(--navy);color:var(--navy)}.workflow-step.active{color:var(--navy);font-weight:800}
     .session-grid{display:grid;grid-template-columns:1.1fr 1fr 1.4fr 1fr;gap:14px;align-items:end}.session-open{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}.session-banner{display:flex;justify-content:space-between;gap:16px;align-items:center;background:var(--blue-soft);border:1px solid #D7DEF5;border-radius:8px;padding:15px 17px;margin-top:16px}.session-banner strong{color:var(--navy)}.stage-tag,.tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800}.stage-tag{background:var(--yellow);color:var(--text)}.tag.neutral{background:#EEF0F3;color:#4C5564}.tag.good{background:var(--green-soft);color:var(--green)}.tag.warn{background:var(--yellow-soft);color:#6C5600}.tag.bad{background:var(--red-soft);color:#A32125}.tag.blue{background:var(--blue-soft);color:var(--navy)}.session-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}.locked-note{font-size:13px;color:var(--grey);margin-right:auto;align-self:center}
@@ -185,7 +188,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         <button class="nav" data-view="panduan"><span>?</span>Panduan</button>
         <button class="nav" data-view="admin" hidden><span>⚙</span>Admin</button>
       </nav>
-      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V13.0</div>
+      <div class="sidebar-foot">Supabase<br><span id="sidebar-state">Menunggu login</span><br><br>CUI INVENTORY / V13.2</div>
     </aside>
     <div class="workspace">
       <header class="topbar"><span class="breadcrumb">Operasional / Supply Chain / <strong id="crumb">Stok opname</strong></span><div class="account"><span id="account-email" class="account-email"></span><span id="account-role" class="tag blue"></span><button id="logout-button" class="secondary">Keluar</button></div></header>
@@ -238,6 +241,11 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
             <label id="session-mode-label" hidden>Jenis sesi<select id="session-mode"><option value="production">Operasional</option><option value="test">Uji</option></select></label>
             <div id="session-open" class="session-open"><label>Sesi yang sudah tersimpan<select id="session-select"><option value="">Pilih sesi…</option></select></label><button id="open-session" class="secondary">Buka sesi</button></div>
             <div id="session-banner" class="session-banner" hidden></div><div id="session-actions" class="session-actions"></div>
+            <details id="opname-session-options" class="session-options" hidden>
+              <summary>Opsi sesi</summary>
+              <p>Pilih sesi khusus untuk pemeriksaan yang hanya mencatat barang temuan. Saat opname rutin, gunakan <strong>Tambahkan item temuan</strong> di dalam Hit 1.</p>
+              <button type="button" class="secondary" data-start-found>Mulai sesi khusus temuan</button>
+            </details>
           </section>
           <div id="stats" class="stats" aria-label="Dashboard stok opname"></div>
           <div id="opname-company-progress"></div>
@@ -305,7 +313,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
           </section>
         </section>
         <section id="view-qr" class="view" hidden><section class="panel">
-          <div class="panel-head"><div><h2>QR item & lokasi</h2><p>Label menyimpan item code, gudang, lokasi, dan rak.</p></div><span class="tag blue">Format QR v1</span></div>
+          <div class="panel-head"><div><h2>QR item & lokasi</h2><p>Label menyimpan item code, deskripsi barang, gudang, lokasi, dan rak.</p></div><span class="tag blue">Format QR v2</span></div>
           <div class="qr-form">
             <label>Perusahaan<select id="qr-company"></select></label>
             <label>Gudang<select id="qr-warehouse" disabled></select></label>
@@ -360,7 +368,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     <div id="calc-error" class="form-error" role="alert" hidden></div><button id="calc-apply" class="primary full" type="button">Gunakan hasil ke jumlah fisik</button>
   </dialog>
   <dialog id="scan-dialog">
-    <div class="dialog-head"><div><p class="eyebrow">SCAN QR</p><h2>Arahkan kamera ke label</h2></div><button class="dialog-close" type="button" data-close="scan-dialog" aria-label="Tutup">×</button></div>
+    <div class="dialog-head"><div><p class="eyebrow">SCAN QR</p><h2 id="scan-title">Arahkan kamera ke label</h2></div><button class="dialog-close" type="button" data-close="scan-dialog" aria-label="Tutup">×</button></div>
     <div id="qr-reader" class="scanner-box"></div><p id="camera-status" class="muted activity-line" role="status"></p>
     <div class="button-row"><button id="camera-retry" class="secondary" type="button">Coba kamera lagi</button><label>Scan foto QR<input id="scan-file" type="file" accept="image/*"></label></div>
     <div class="manual-scan" style="margin-top:10px"><input id="manual-code" aria-label="Kode barang atau isi QR" placeholder="Item code atau isi QR"><button id="manual-submit" class="primary" type="button">Buka barang</button></div><div id="scan-error" class="form-error" role="alert" hidden></div>
@@ -383,6 +391,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
   </form></dialog>
   <dialog id="found-dialog"><form id="found-form">
     <div class="dialog-head"><h2>Tambahkan item temuan</h2><button class="dialog-close" type="button" data-close="found-dialog" aria-label="Tutup">×</button></div>
+    <div class="activity-line"><button id="found-scan" class="secondary" type="button">Scan QR item temuan</button><span id="found-scan-status" class="muted" role="status"></span></div>
     <label>Perusahaan dan gudang<select id="found-scope" required></select></label>
     <label>Item Code<input id="found-code" maxlength="120" required></label>
     <div class="two-col"><label>Deskripsi barang<input id="found-name" maxlength="300"></label><label>Satuan<input id="found-unit" maxlength="40"></label></div>
@@ -1044,11 +1053,12 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const session=data?.session;
       const items=data?.items||[];
       const counted=items.filter(item=>item.counted1).length;
+      const completion=items.length?num(Number((counted*100/items.length).toFixed(1)))+'% dari '+num(items.length)+' SKU dalam sesi':'';
       const all=session?.total_items??scopeTotal(type==='cycle'?'cycle':'session');
       if(type==='cycle'){
         $('cycle-stats').innerHTML=statCard('Total item gudang',all,'Kode barang unik')+
           statCard('Target sesi',session?items.length:null,session?.scope_items!=null?num(session.scope_items)+' item sesuai klasifikasi':'Daftar tersimpan')+
-          statCard('Sudah dihitung',session?counted:null,'Item dengan hitungan')+
+          statCard('Sudah dihitung',session?counted:null,completion||'Item dengan hitungan')+
           statCard('Sisa hitungan',session?items.length-counted:null,'Bisa dilanjutkan di hari berikutnya');
         return;
       }
@@ -1059,7 +1069,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       const label=session?.stock_grouped?'Total item gabungan':fromExcel?'Total item di Excel':'Total item gudang';
       const totalDetail=session?.stock_grouped?'Item per perusahaan dan gudang':session?num(items.length)+' item dalam sesi':'Kode barang unik';
       $('stats').innerHTML=statCard(label,session?.stock_grouped?items.length:total,totalDetail)+
-        statCard('Sudah dihitung',session?counted:null,'Item dengan Hit 1 tersimpan')+
+        statCard('Sudah dihitung',session?counted:null,completion?completion+' · Hit 1':'Item dengan Hit 1 tersimpan')+
         statCard('Masuk Hit 2',session?.hit1_ended_at?recount.length:null,recount.filter(item=>item.counted2).length+' selesai Hit 2')+
         statCard('Perlu validasi',session&&(session.hit2_ended_at||session.status==='completed')?validate.length:null,'Selisih Hit 2 yang belum divalidasi');
       renderCompanyProgress(session,items);
@@ -1110,10 +1120,13 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         }[session?.status];
         const allowed=session?.status==='validation'?canValidate():canCount();
         const startLabel=usesGroupedExcel()?'Mulai sesi gabungan':usesExcel()?'Mulai sesi dari Excel':'Mulai / lanjutkan sesi';
-        $('session-actions').innerHTML=(canCount()?'<button type="button" class="secondary" data-start-opname>'+startLabel+'</button>':'')+
-          (canCount()&&!usesExcel()&&(!session||session.status==='completed')?'<button type="button" class="secondary" data-start-found>Mulai sesi khusus temuan</button>':'')+
+        const startStyle=action&&allowed?'secondary':'primary';
+        $('session-actions').innerHTML=(canCount()?'<button type="button" class="'+startStyle+'" data-start-opname>'+startLabel+'</button>':'')+
           (session?'<button type="button" class="secondary" data-refresh-work="opname">Muat ulang sesi</button>':'')+
           (action&&allowed?'<button type="button" class="primary" data-advance-work="opname">'+action+'</button>':'');
+        const options=$('opname-session-options');
+        options.hidden=!canCount()||usesExcel()||Boolean(session&&session.status!=='completed');
+        if(options.hidden)options.open=false;
       }
       const host=$(type==='opname'?'opname-queue':'cycle-list');
       if(!session){host.replaceChildren();return}
@@ -1232,22 +1245,49 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
       fillSelect('found-scope',[...choices.values()],'Pilih perusahaan dan gudang…');
       $('found-scope').value=choices.size===1?[...choices.keys()][0]:'';
       for(const id of ['found-code','found-name','found-unit'])$(id).value='';
+      $('found-scan-status').textContent='';
       showFormError('found-error','');
       $('found-dialog').showModal();
-      $('found-code').focus();
+      $('found-scan').focus();
+    }
+    function clearFoundScan(){
+      const scan=foundDraft?.scan;
+      if(!scan)return;
+      if($('found-name').value===scan.name)$('found-name').value='';
+      if($('found-unit').value===scan.unit)$('found-unit').value='';
+      foundDraft.scan=null;
+      $('found-scan-status').textContent='';
+    }
+    async function loadFoundDescription(draft,scan,session){
+      const current=()=>foundDraft===draft&&draft.scan===scan&&$('found-dialog').open&&
+        $('found-scope').value===scan.scope&&$('found-code').value.trim()===scan.code;
+      const [company,warehouseCode]=JSON.parse(scan.scope);
+      try{
+        const catalog=await fetchQrCatalog({company,warehouseCode,branch:session.branch},current);
+        if(!catalog||!current())return;
+        const item=catalog.find(row=>row.code===scan.code)||catalog.find(row=>row.code.toLowerCase()===scan.code.toLowerCase());
+        if(item?.name&&!$('found-name').value.trim())$('found-name').value=scan.name=item.name.slice(0,$('found-name').maxLength);
+        $('found-scan-status').textContent=$('found-name').value.trim()?'Kode dan deskripsi terisi. Periksa sebelum menambahkan.':
+          'Kode terisi. Deskripsi belum ada di QR atau master gudang. Isi deskripsi jika diperlukan.';
+      }catch{
+        if(current())$('found-scan-status').textContent='Kode terisi. Deskripsi dari master gagal dimuat. Anda bisa mengisinya langsung.';
+      }
     }
     async function submitFound(){
       const draft=foundDraft;
       if(!draft||!$('found-scope').value)return;
-      const [company,warehouse]=JSON.parse($('found-scope').value);
+      const scope=$('found-scope').value;
+      const [company,warehouse]=JSON.parse(scope);
+      const itemCode=$('found-code').value.trim();
+      const prefill=draft.scan?.scope===scope&&draft.scan.code===itemCode?draft.scan.prefill:undefined;
       const code=await rpc('cui_inventory_add_found',{p_id:draft.id,p_company:company,p_warehouse:warehouse,
-        p_code:$('found-code').value.trim(),p_name:$('found-name').value.trim(),p_unit:$('found-unit').value.trim()});
+        p_code:itemCode,p_name:$('found-name').value.trim(),p_unit:$('found-unit').value.trim()});
       if(foundDraft!==draft||!$('found-dialog').open||work[draft.type]?.session.id!==draft.id)return;
       await reloadWork(draft.type,draft.id);
       if(foundDraft!==draft||!$('found-dialog').open)return;
       $('found-dialog').close();
       foundDraft=null;
-      showCount(draft.type,code);
+      showCount(draft.type,code,prefill);
     }
     function showCount(type,code,prefill={}){
       if(!canCount())return;
@@ -1390,15 +1430,19 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     async function clearScanner(active){
       try{if(active.isScanning)await active.stop();active.clear()}catch{}
     }
-    function startScanner(type){
-      if(!canCount()||!isCounting(work[type]?.session))return;
-      scanTarget=type;
+    function startScanner(type,found=null){
+      const session=work[type]?.session;
+      if(!canCount()||!isCounting(session))return;
+      if(found&&(!$('found-dialog').open||found.id!==session.id||session.status!=='hit1_active'))return;
+      scanTarget={type,sessionId:session.id,found};
       scanGeneration++;
       showFormError('scan-error','');
       $('qr-reader').replaceChildren();
       $('manual-code').value='';
       $('scan-file').value='';
       $('camera-status').textContent='';
+      $('scan-title').textContent=found?'Scan label item temuan':'Arahkan kamera ke label';
+      $('manual-submit').textContent=found?'Isi formulir temuan':'Buka barang';
       $('scan-dialog').showModal();
       runScanner();
     }
@@ -1478,23 +1522,83 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         }
       }
     }
+    function readInventoryQr(raw){
+      const value=String(raw??'').trim();
+      if(!value)return null;
+      if(!/^[{\[]/.test(value))return {code:value};
+      const field=entry=>typeof entry==='string'||typeof entry==='number'?String(entry).trim():'';
+      try{
+        const qr=JSON.parse(value);
+        const code=field(qr.item_code??qr.code??qr.itemCode??qr.kode_barang);
+        if(!code)return null;
+        const rack=field(qr.rack??qr.rak),location=field(qr.location??qr.lokasi);
+        return {code,company:field(qr.company??qr.perusahaan),warehouse:field(qr.warehouse??qr.warehouse_code??qr.kode_gudang),
+          branch:field(qr.branch??qr.cabang),name:field(qr.description??qr.name??qr.item_name??qr.deskripsi),unit:field(qr.unit??qr.satuan),
+          block:rack?(location||field(qr.block??qr.blok)):'',rack:rack||location};
+      }catch{return null}
+    }
+    function fillFoundFromQr(draft,session,label){
+      const {code,company,warehouse,branch}=label;
+      if(code.length>$('found-code').maxLength||/^[a-z][a-z\d+.-]*:\/\//i.test(code)){
+        showFormError('scan-error','QR tidak memuat Item Code yang valid. Gunakan label barang.');
+        return false;
+      }
+      const select=$('found-scope');
+      const options=Array.from(select.options,option=>option.value).filter(Boolean).map(scope=>{
+        const [company,warehouse]=JSON.parse(scope);
+        return {scope,company,warehouse};
+      });
+      const compatible=options.filter(option=>(!warehouse||warehouse.toLowerCase()===option.warehouse.toLowerCase())&&
+        (!company||qrCompanyMatch(option.company,company)));
+      const exact=company?compatible.filter(option=>option.company.toLowerCase()===company.toLowerCase()):[];
+      const matches=exact.length?exact:compatible;
+      if(!matches.length||(branch&&branchKey(branch)!==branchKey(session.branch))){
+        showFormError('scan-error','QR ini berasal dari cabang, perusahaan, atau gudang di luar sesi.');
+        return false;
+      }
+      const match=matches.length===1?matches[0]:matches.find(option=>option.scope===select.value);
+      if(!match){
+        showFormError('scan-error','QR belum menentukan satu gudang. Pilih perusahaan dan gudang di formulir temuan atau gunakan label yang lengkap.');
+        return false;
+      }
+      select.value=match.scope;
+      $('found-code').value=code;
+      $('found-name').value=label.name?.slice(0,$('found-name').maxLength)||'';
+      $('found-unit').value=label.unit?.slice(0,$('found-unit').maxLength)||'';
+      const scan={code,scope:match.scope,name:$('found-name').value,unit:$('found-unit').value,
+        prefill:{block:label.block,rack:label.rack}};
+      draft.scan=scan;
+      showFormError('found-error','');
+      $('found-scan-status').textContent=scan.name?'Kode dan deskripsi dari QR terisi. Periksa sebelum menambahkan.':
+        'Kode dari QR terisi. Mencari deskripsi di master gudang…';
+      if(!scan.name)loadFoundDescription(draft,scan,session);
+      return true;
+    }
     async function handleScan(raw){
-      if(!$('scan-dialog').open||!scanTarget)return;
-      const data=work[scanTarget];
-      if(!data||!isCounting(data.session))return;
-      let code=String(raw??'').trim(),payload;
-      if(!code)return;
-      try{payload=JSON.parse(code)}catch{}
-      if(payload&&typeof payload==='object')code=String(payload.item_code??payload.code??code).trim();
-      const warehouse=payload?.warehouse??payload?.warehouse_code;
+      const target=scanTarget;
+      if(!$('scan-dialog').open||!target||!String(raw??'').trim())return;
+      const {type,sessionId,found}=target;
+      const data=work[type];
+      if(!canCount()||!isCounting(data?.session)||data.session.id!==sessionId)return;
+      const label=readInventoryQr(raw);
+      if(!label){showFormError('scan-error','QR tidak memuat Item Code yang valid. Gunakan label barang.');return}
+      if(found){
+        if(foundDraft!==found||!$('found-dialog').open||data.session.status!=='hit1_active')return;
+        if(fillFoundFromQr(found,data.session,label)){
+          scanTarget=null;
+          $('scan-dialog').close();
+        }
+        return;
+      }
+      const {code,warehouse,company,branch}=label;
       const grouped=data.session.stock_grouped;
-      if((payload?.branch&&branchKey(payload.branch)!==branchKey(data.session.branch))||
-        (!grouped&&((warehouse&&warehouse!==data.session.warehouse_code)||(payload?.company&&payload.company!==data.session.company)))){
+      if((branch&&branchKey(branch)!==branchKey(data.session.branch))||
+        (!grouped&&((warehouse&&warehouse!==data.session.warehouse_code)||(company&&company!==data.session.company)))){
         showFormError('scan-error','QR ini berasal dari cabang, perusahaan, atau gudang yang berbeda.');
         return;
       }
       const matches=data.items.filter(item=>item.code===code&&(!grouped||
-        ((!warehouse||warehouse===item.warehouse_code)&&(!payload?.company||payload.company===item.company))));
+        ((!warehouse||warehouse===item.warehouse_code)&&(!company||company===item.company))));
       if(matches.length>1){
         showFormError('scan-error','Kode ini ada di beberapa perusahaan atau gudang. Scan QR yang memuat perusahaan dan kode gudang, atau pilih barang dari daftar.');
         return;
@@ -1504,11 +1608,10 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
         showFormError('scan-error','Item ini tidak tercantum dalam daftar hitung tahap aktif.');
         return;
       }
-      const type=scanTarget;
       scanTarget=null;
       $('scan-dialog').close();
       await stopScanner();
-      showCount(type,itemKey(item),{block:payload?.rack?(payload?.location??payload?.block):'',rack:payload?.rack??payload?.location});
+      if(work[type]?.session.id===sessionId)showCount(type,itemKey(item),{block:label.block,rack:label.rack});
     }
 
     function changeQrCompany(){
@@ -1627,12 +1730,12 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     }
     function qrError(error){
       return String(error).includes('code length overflow')
-        ?'Isi label terlalu panjang. Pendekkan lokasi atau kode rak.'
+        ?'Isi label terlalu panjang. Pendekkan deskripsi, lokasi, atau kode rak.'
         :'Gambar QR gagal dibuat. Muat ulang halaman dan coba lagi.';
     }
     function qrPayload(label){
-      return {v:1,item_code:label.code,warehouse:label.warehouseCode,location:label.location,rack:label.rack,company:label.company,
-        ...(label.branch?{branch:label.branch}:{})};
+      return {v:2,item_code:label.code,warehouse:label.warehouseCode,location:label.location,rack:label.rack,company:label.company,
+        ...(label.branch?{branch:label.branch}:{}),...(label.name?{description:label.name}:{})};
     }
     function makeLabelCard(label,download){
       const canvas=drawInventoryQr(qrPayload(label));
@@ -2368,6 +2471,9 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     $('found-form').addEventListener('submit',event=>{
       event.preventDefault();doWork(event.submitter,submitFound,'found-error');
     });
+    $('found-scan').addEventListener('click',()=>{if(foundDraft)startScanner(foundDraft.type,foundDraft)});
+    $('found-code').addEventListener('input',clearFoundScan);
+    $('found-scope').addEventListener('change',clearFoundScan);
     $('count-form').addEventListener('input',clearCountChoice);
     $('count-add').addEventListener('click',event=>doWork(event.currentTarget,()=>submitCount('add'),'count-error'));
     $('count-replace').addEventListener('click',event=>doWork(event.currentTarget,()=>submitCount('replace'),'count-error'));
@@ -2407,7 +2513,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
     $('manual-code').addEventListener('keydown',event=>{
       if(event.key==='Enter'){event.preventDefault();handleScan($('manual-code').value)}
     });
-    $('scan-dialog').addEventListener('close',()=>{scanGeneration++;scanTarget=null;stopScanner()});
+    $('scan-dialog').addEventListener('close',()=>{if(!$('scan-dialog').open){scanGeneration++;scanTarget=null;stopScanner()}});
     $('qr-company').addEventListener('change',changeQrCompany);
     $('qr-warehouse').addEventListener('change',loadQrItems);
     $('qr-load').addEventListener('click',loadQrItems);
